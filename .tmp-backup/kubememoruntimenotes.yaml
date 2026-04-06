@@ -1,0 +1,45 @@
+apiVersion: v1
+items:
+- apiVersion: runtime.notes.kubememo.io/v1alpha1
+  kind: KubeMemoRuntimeNote
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"runtime.notes.kubememo.io/v1alpha1","kind":"KubeMemoRuntimeNote","metadata":{"annotations":{},"labels":{"notes.kubememo.io/type":"activity"},"name":"manual-scale-change-detected","namespace":"kubememo-runtime"},"spec":{"content":"Temporary runtime note for testing KubeMemo rendering and expiry.","createdAt":"2026-04-06T19:15:58.9203850Z","expiresAt":"2026-04-07T07:15:58.4721930Z","format":"markdown","links":[],"noteType":"activity","owner":{"contact":"","team":""},"severity":"info","source":{"confidence":"high","generator":"New-KubeMemo","type":"manual"},"summary":"Replicas changed from 2 to 5 during investigation","tags":[],"target":{"apiVersion":"v1","kind":"Deployment","mode":"resource","name":"orders-api","namespace":"prod"},"temporary":true,"title":"Manual scale change detected","validFrom":"2026-04-06T19:15:58.5002400Z"},"status":{"expired":false,"state":"active"}}
+    creationTimestamp: "2026-04-06T19:09:55Z"
+    generation: 2
+    labels:
+      notes.kubememo.io/type: activity
+    name: manual-scale-change-detected
+    namespace: kubememo-runtime
+    resourceVersion: "1834"
+    uid: 535f0db4-d140-42b3-871b-594475c59526
+  spec:
+    content: Temporary runtime note for testing KubeMemo rendering and expiry.
+    createdAt: "2026-04-06T19:15:58.9203850Z"
+    expiresAt: "2026-04-07T07:15:58.4721930Z"
+    format: markdown
+    links: []
+    noteType: activity
+    owner:
+      contact: ""
+      team: ""
+    severity: info
+    source:
+      confidence: high
+      generator: New-KubeMemo
+      type: manual
+    summary: Replicas changed from 2 to 5 during investigation
+    tags: []
+    target:
+      apiVersion: v1
+      kind: Deployment
+      mode: resource
+      name: orders-api
+      namespace: prod
+    temporary: true
+    title: Manual scale change detected
+    validFrom: "2026-04-06T19:15:58.5002400Z"
+kind: List
+metadata:
+  resourceVersion: ""

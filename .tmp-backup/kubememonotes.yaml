@@ -1,0 +1,44 @@
+apiVersion: v1
+items:
+- apiVersion: notes.kubememo.io/v1alpha1
+  kind: KubeMemoNote
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"notes.kubememo.io/v1alpha1","kind":"KubeMemoNote","metadata":{"annotations":{},"labels":{"notes.kubememo.io/type":"advisory"},"name":"orders-api-warm-up-behavior","namespace":"prod"},"spec":{"content":"This service warms internal cache after deployment.\nIgnore transient 502s for up to 3 minutes unless the error rate keeps rising.","expiresAt":null,"format":"markdown","links":[],"noteType":"advisory","owner":{"contact":"@platform-team","team":"platform"},"severity":"info","source":{"type":"manual"},"summary":"Expected transient 502s after deployment","tags":["warmup","deploy"],"target":{"apiVersion":"v1","kind":"Deployment","mode":"resource","name":"orders-api","namespace":"prod"},"title":"Orders API warm-up behavior","validFrom":"2026-04-06T19:15:58.4880060Z"},"status":{"expired":false,"state":"active"}}
+    creationTimestamp: "2026-04-06T19:08:26Z"
+    generation: 2
+    labels:
+      notes.kubememo.io/type: advisory
+    name: orders-api-warm-up-behavior
+    namespace: prod
+    resourceVersion: "1833"
+    uid: 056da1ce-13f4-4f15-85b4-a11c6700be80
+  spec:
+    content: |-
+      This service warms internal cache after deployment.
+      Ignore transient 502s for up to 3 minutes unless the error rate keeps rising.
+    format: markdown
+    links: []
+    noteType: advisory
+    owner:
+      contact: '@platform-team'
+      team: platform
+    severity: info
+    source:
+      type: manual
+    summary: Expected transient 502s after deployment
+    tags:
+    - warmup
+    - deploy
+    target:
+      apiVersion: v1
+      kind: Deployment
+      mode: resource
+      name: orders-api
+      namespace: prod
+    title: Orders API warm-up behavior
+    validFrom: "2026-04-06T19:15:58.4880060Z"
+kind: List
+metadata:
+  resourceVersion: ""

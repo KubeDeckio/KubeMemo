@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kubememo
+  namespace: kubememo-runtime
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubememo-reader
+rules:
+  - apiGroups: ["notes.kubememo.io"]
+    resources: ["memos"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["runtime.notes.kubememo.io"]
+    resources: ["runtimememos"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubememo-durable-writer
+rules:
+  - apiGroups: ["notes.kubememo.io"]
+    resources: ["memos"]
+    verbs: ["create", "update", "patch", "delete", "get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubememo-runtime-writer
+rules:
+  - apiGroups: ["runtime.notes.kubememo.io"]
+    resources: ["runtimememos"]
+    verbs: ["create", "update", "patch", "delete", "get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubememo-annotation-patcher
+rules:
+  - apiGroups: ["", "apps", "networking.k8s.io", "autoscaling", "policy"]
+    resources: ["services", "namespaces", "deployments", "statefulsets", "daemonsets", "ingresses", "horizontalpodautoscalers", "poddisruptionbudgets"]
+    verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kubememo-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kubememo-reader
+subjects:
+  - kind: ServiceAccount
+    name: kubememo
+    namespace: kubememo-runtime

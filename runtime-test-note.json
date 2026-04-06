@@ -1,0 +1,45 @@
+{
+  "apiVersion": "runtime.notes.kubememo.io/v1alpha1",
+  "spec": {
+    "createdAt": "2026-04-06T19:09:24.1148520Z",
+    "severity": "info",
+    "links": [],
+    "owner": {
+      "contact": "",
+      "team": ""
+    },
+    "temporary": true,
+    "content": "Temporary runtime note for testing KubeMemo rendering and expiry.",
+    "title": "Manual scale change detected",
+    "summary": "Replicas changed from 2 to 5 during investigation",
+    "noteType": "activity",
+    "target": {
+      "apiVersion": "v1",
+      "name": "orders-api",
+      "mode": "resource",
+      "kind": "Deployment",
+      "namespace": "prod"
+    },
+    "source": {
+      "confidence": "high",
+      "generator": "New-KubeMemo",
+      "type": "manual"
+    },
+    "validFrom": "2026-04-06T19:09:24.1125700Z",
+    "expiresAt": "2026-04-07T07:09:24.1137760Z",
+    "tags": [],
+    "format": "markdown"
+  },
+  "kind": "KubeMemoRuntimeNote",
+  "status": {
+    "expired": false,
+    "state": "active"
+  },
+  "metadata": {
+    "name": "runtime-test-note",
+    "namespace": "kubememo-runtime",
+    "labels": {
+      "notes.kubememo.io/type": "activity"
+    }
+  }
+}
