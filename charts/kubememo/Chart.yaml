@@ -1,0 +1,17 @@
+apiVersion: v2
+name: kubememo
+description: KubeMemo optional in-cluster activity capture for Kubernetes operational memory
+type: application
+version: 0.0.1
+appVersion: "0.0.1"
+home: https://kubememo.kubedeck.io
+sources:
+  - https://github.com/KubeDeckio/KubeMemo
+keywords:
+  - kubernetes
+  - operations
+  - runbooks
+  - gitops
+maintainers:
+  - name: Richard Hooper
+    url: https://kubedeck.io

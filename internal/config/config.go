@@ -51,6 +51,7 @@ type ActivityConfig struct {
 	WatchKinds          []string `json:"watchKinds"`
 	CaptureActions      []string `json:"captureActions"`
 	DedupeWindowSeconds int      `json:"dedupeWindowSeconds"`
+	Image               string   `json:"image"`
 }
 
 type RenderingConfig struct {
@@ -107,6 +108,8 @@ func Default() Config {
 				"Ingress",
 				"HorizontalPodAutoscaler",
 				"Namespace",
+				"Gateway",
+				"HTTPRoute",
 			},
 			CaptureActions: []string{
 				"scale",
@@ -116,6 +119,7 @@ func Default() Config {
 				"ingressChange",
 			},
 			DedupeWindowSeconds: 60,
+			Image:               "ghcr.io/kubedeckio/kubememo:latest",
 		},
 		Rendering: RenderingConfig{
 			Cards:    true,

@@ -1,0 +1,15 @@
+.git
+.github
+docs
+overrides
+site
+Tests
+tmp-export
+.tmp-backup
+KubeMemo/bin
+charts
+README.md
+CHANGELOG.md
+mkdocs.yml
+requirements-docs.txt
+runtime-test-note.json

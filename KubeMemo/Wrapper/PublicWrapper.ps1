@@ -5,7 +5,9 @@ function Install-KubeMemo {
         [switch]$EnableRuntimeStore,
         [string]$RuntimeNamespace = (Get-KubeMemoConfigInternal).RuntimeNamespace,
         [switch]$GitOpsAware,
-        [switch]$InstallRbac
+        [switch]$InstallRbac,
+        [switch]$EnableActivityCapture,
+        [string]$ActivityCaptureImage
     )
 
     if ($PSCmdlet.ShouldProcess('cluster', 'Install KubeMemo prerequisites')) {
@@ -14,6 +16,8 @@ function Install-KubeMemo {
         if ($EnableRuntimeStore) { $args += '--enable-runtime-store' }
         if ($InstallRbac) { $args += '--install-rbac' }
         if ($GitOpsAware) { $args += '--gitops-aware' }
+        if ($EnableActivityCapture) { $args += '--enable-activity-capture' }
+        if ($ActivityCaptureImage) { $args += @('--activity-capture-image', $ActivityCaptureImage) }
         Invoke-KubeMemoBinary -Arguments $args -ParseJson
     }
 }
@@ -39,13 +43,17 @@ function Update-KubeMemo {
     param(
         [switch]$IncludeRbac,
         [string]$RuntimeNamespace = (Get-KubeMemoConfigInternal).RuntimeNamespace,
-        [switch]$GitOpsAware
+        [switch]$GitOpsAware,
+        [switch]$EnableActivityCapture,
+        [string]$ActivityCaptureImage
     )
 
     if ($PSCmdlet.ShouldProcess('cluster', 'Update KubeMemo prerequisites')) {
         $args = @('update', '--output', 'json', '--runtime-namespace', $RuntimeNamespace)
         if ($IncludeRbac) { $args += '--include-rbac' }
         if ($GitOpsAware) { $args += '--gitops-aware' }
+        if ($EnableActivityCapture) { $args += '--enable-activity-capture' }
+        if ($ActivityCaptureImage) { $args += @('--activity-capture-image', $ActivityCaptureImage) }
         Invoke-KubeMemoBinary -Arguments $args -ParseJson
     }
 }

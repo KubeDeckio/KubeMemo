@@ -336,6 +336,10 @@ func activityDiffs(kind, apiVersion string, oldObj, newObj map[string]any) []Act
 		candidates = append([]ActivityEvent{}, serviceTypeDiff(oldObj, newObj))
 	case "ingress":
 		candidates = append([]ActivityEvent{}, ingressDiff(oldObj, newObj))
+	case "gateway":
+		candidates = append([]ActivityEvent{}, gatewayListenerDiff(oldObj, newObj))
+	case "httproute":
+		candidates = append([]ActivityEvent{}, httpRouteDiff(oldObj, newObj))
 	default:
 		return nil
 	}
@@ -395,6 +399,24 @@ func ingressDiff(oldObj, newObj map[string]any) ActivityEvent {
 		return ActivityEvent{}
 	}
 	return ActivityEvent{Action: "ingressChange", FieldPath: "spec.rules", OldValue: oldVal, NewValue: newVal}
+}
+
+func gatewayListenerDiff(oldObj, newObj map[string]any) ActivityEvent {
+	oldVal := sliceSummary(oldObj, "spec", "listeners")
+	newVal := sliceSummary(newObj, "spec", "listeners")
+	if oldVal == newVal || oldVal == "" && newVal == "" {
+		return ActivityEvent{}
+	}
+	return ActivityEvent{Action: "gatewayListenerChange", FieldPath: "spec.listeners", OldValue: oldVal, NewValue: newVal}
+}
+
+func httpRouteDiff(oldObj, newObj map[string]any) ActivityEvent {
+	oldVal := httpRouteSummary(oldObj)
+	newVal := httpRouteSummary(newObj)
+	if oldVal == newVal || oldVal == "" && newVal == "" {
+		return ActivityEvent{}
+	}
+	return ActivityEvent{Action: "httpRouteChange", FieldPath: "spec.rules", OldValue: oldVal, NewValue: newVal}
 }
 
 func nodeSelectorDiff(oldObj, newObj map[string]any) ActivityEvent {
@@ -505,6 +527,18 @@ func ingressSummary(obj map[string]any) string {
 	}
 	sort.Strings(items)
 	return strings.Join(items, ", ")
+}
+
+func httpRouteSummary(obj map[string]any) string {
+	rules, found, _ := unstructured.NestedSlice(obj, "spec", "rules")
+	if !found {
+		return ""
+	}
+	data, err := json.Marshal(rules)
+	if err != nil {
+		return ""
+	}
+	return string(data)
 }
 
 func mapSummary(obj map[string]any, fields ...string) string {

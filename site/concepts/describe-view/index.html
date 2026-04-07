@@ -8,25 +8,31 @@
       
       
       
+        <link rel="canonical" href="https://kubememo.kubedeck.io/concepts/describe-view/">
       
+      
+        <link rel="prev" href="../annotations/">
+      
+      
+        <link rel="next" href="../../reference/commands/">
       
       
         
       
       
-      <link rel="icon" href="/images/favicon.svg">
+      <link rel="icon" href="../../images/favicon.svg">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>KubeMemo</title>
+        <title>kubectl Describe View - KubeMemo</title>
       
     
     
-      <link rel="stylesheet" href="/assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="/assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -45,9 +51,9 @@
       
     
     
-      <link rel="stylesheet" href="/stylesheets/extra.css">
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("/",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -71,6 +77,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#kubectl-describe-view" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -81,9 +92,9 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="/." title="KubeMemo" class="md-header__button md-logo" aria-label="KubeMemo" data-md-component="logo">
+    <a href="../.." title="KubeMemo" class="md-header__button md-logo" aria-label="KubeMemo" data-md-component="logo">
       
-  <img src="/images/logo.svg" alt="logo">
+  <img src="../../images/logo.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -100,7 +111,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              
+              kubectl Describe View
             
           </span>
         </div>
@@ -221,7 +232,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="/." class="md-tabs__link">
+      <a href="../.." class="md-tabs__link">
         
   
   
@@ -240,7 +251,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="/getting-started/" class="md-tabs__link">
+      <a href="../../getting-started/" class="md-tabs__link">
         
   
   
@@ -261,7 +272,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="/installation/" class="md-tabs__link">
+        <a href="../../installation/" class="md-tabs__link">
           
   
   
@@ -281,7 +292,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="/cli/" class="md-tabs__link">
+        <a href="../../cli/" class="md-tabs__link">
           
   
   
@@ -297,11 +308,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="/concepts/stores/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../stores/" class="md-tabs__link">
           
   
   
@@ -321,7 +334,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="/reference/commands/" class="md-tabs__link">
+        <a href="../../reference/commands/" class="md-tabs__link">
           
   
   
@@ -339,7 +352,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="/changelog/" class="md-tabs__link">
+      <a href="../../changelog/" class="md-tabs__link">
         
   
   
@@ -393,9 +406,9 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="/." title="KubeMemo" class="md-nav__button md-logo" aria-label="KubeMemo" data-md-component="logo">
+    <a href="../.." title="KubeMemo" class="md-nav__button md-logo" aria-label="KubeMemo" data-md-component="logo">
       
-  <img src="/images/logo.svg" alt="logo">
+  <img src="../../images/logo.svg" alt="logo">
 
     </a>
     KubeMemo
@@ -422,7 +435,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -449,7 +462,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/getting-started/" class="md-nav__link">
+      <a href="../../getting-started/" class="md-nav__link">
         
   
   
@@ -528,7 +541,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/installation/" class="md-nav__link">
+      <a href="../../installation/" class="md-nav__link">
         
   
   
@@ -556,7 +569,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/installation/macos-linux/" class="md-nav__link">
+      <a href="../../installation/macos-linux/" class="md-nav__link">
         
   
   
@@ -584,7 +597,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/installation/powershell/" class="md-nav__link">
+      <a href="../../installation/powershell/" class="md-nav__link">
         
   
   
@@ -671,7 +684,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/cli/" class="md-nav__link">
+      <a href="../../cli/" class="md-nav__link">
         
   
   
@@ -699,7 +712,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/cli/tui/" class="md-nav__link">
+      <a href="../../cli/tui/" class="md-nav__link">
         
   
   
@@ -727,7 +740,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/cli/powershell/" class="md-nav__link">
+      <a href="../../cli/powershell/" class="md-nav__link">
         
   
   
@@ -759,26 +772,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
             
   
   
@@ -796,7 +814,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
@@ -814,7 +832,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/concepts/stores/" class="md-nav__link">
+      <a href="../stores/" class="md-nav__link">
         
   
   
@@ -842,7 +860,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/concepts/gitops/" class="md-nav__link">
+      <a href="../gitops/" class="md-nav__link">
         
   
   
@@ -870,7 +888,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/concepts/annotations/" class="md-nav__link">
+      <a href="../annotations/" class="md-nav__link">
         
   
   
@@ -895,10 +913,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="/concepts/describe-view/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    kubectl Describe View
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -914,6 +959,59 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-this-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why this works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#design-principle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Design principle
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -985,7 +1083,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/reference/commands/" class="md-nav__link">
+      <a href="../../reference/commands/" class="md-nav__link">
         
   
   
@@ -1013,7 +1111,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/reference/crds/" class="md-nav__link">
+      <a href="../../reference/crds/" class="md-nav__link">
         
   
   
@@ -1048,7 +1146,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/changelog/" class="md-nav__link">
+      <a href="../../changelog/" class="md-nav__link">
         
   
   
@@ -1112,6 +1210,49 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-this-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why this works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#design-principle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Design principle
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -1129,10 +1270,96 @@
   
 
 
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../.." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Home
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../stores/" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Concepts
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
               
               <article class="md-content__inner md-typeset">
                 
-  <h1>404 - Not found</h1>
+  
+                  
+
+
+  
+    <a href="https://github.com/KubeDeckio/KubeMemo/edit/main/docs/concepts/describe-view.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="kubectl-describe-view">kubectl Describe View<a class="headerlink" href="#kubectl-describe-view" title="Permanent link">&para;</a></h1>
+<p>KubeMemo annotations are designed to make <code>kubectl describe</code> more useful without dumping the full memo body into resource metadata.</p>
+<h2 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h2>
+<p>After durable memos are attached to a Deployment, a <code>kubectl describe</code> can show lightweight memo metadata like:</p>
+<div class="highlight"><pre><span></span><code>Annotations:
+  notes.kubememo.io/enabled:      true
+  notes.kubememo.io/has-note:     true
+  notes.kubememo.io/note-count:   3
+  notes.kubememo.io/runtime-count: 1
+  notes.kubememo.io/view:         kubememo show --kind Deployment --namespace prod --name orders-api
+</code></pre></div>
+<h2 id="why-this-works">Why this works<a class="headerlink" href="#why-this-works" title="Permanent link">&para;</a></h2>
+<ul>
+<li>operators immediately know memo context exists</li>
+<li>the annotation stays small and readable</li>
+<li>the <code>view</code> command points to the real source of truth</li>
+<li>the resource is not bloated with full markdown note content</li>
+</ul>
+<h2 id="design-principle">Design principle<a class="headerlink" href="#design-principle" title="Permanent link">&para;</a></h2>
+<p>Annotations are for discoverability.</p>
+<p>The actual durable and runtime memo content still lives in the KubeMemo CRDs, where it can be rendered properly in the CLI and TUI.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
 
               </article>
             </div>
@@ -1153,6 +1380,44 @@
       
         <footer class="md-footer">
   
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../annotations/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Annotations">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Annotations
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../../reference/commands/" class="md-footer__link md-footer__link--next" aria-label="Next: Commands">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Commands
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
     
   
   <div class="md-footer-meta md-typeset">
@@ -1195,12 +1460,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "/", "features": ["navigation.tabs", "navigation.top", "navigation.sections", "navigation.path", "navigation.footer", "navigation.instant", "navigation.tracking", "content.code.annotate", "content.code.copy", "content.tabs.link", "content.action.edit"], "search": "/assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.top", "navigation.sections", "navigation.path", "navigation.footer", "navigation.instant", "navigation.tracking", "content.code.annotate", "content.code.copy", "content.tabs.link", "content.action.edit"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="/assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
-        <script src="/javascripts/extra.js"></script>
+        <script src="../../javascripts/extra.js"></script>
       
     
   </body>

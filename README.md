@@ -35,17 +35,20 @@ GitHub Actions now handle:
 
 - tag-driven Go binary release assets
 - tag-driven PowerShell Gallery publishing
+- tag-driven GHCR container publishing
 - MkDocs deployment to GitHub Pages
 
 Required repository secrets:
 
 - `PSGALLERY_API_KEY` for PowerShell Gallery publishing
+- `BREW_BUMP_TOKEN` for updating the Homebrew tap formula
 
 Tagging a release like `v0.1.1` triggers:
 
 - cross-platform Go binary builds
 - a GitHub release with release assets
 - a PowerShell module package containing the wrapper and bundled binaries
+- a multi-architecture GHCR image for optional in-cluster activity capture
 
 ## Architecture
 

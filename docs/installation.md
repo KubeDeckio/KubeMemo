@@ -1,6 +1,31 @@
 # Installation
 
-## PowerShell Gallery
+KubeMemo has three supported installation paths:
+
+- Native CLI from Homebrew or GitHub Releases
+- PowerShell module from PowerShell Gallery
+- Optional Helm deployment for in-cluster activity capture
+
+The native CLI is the core product experience. If you work primarily in PowerShell, KubeMemo is also available as a PowerShell module with PowerShell-friendly commands.
+
+Use the path that best matches how your team works:
+
+- [Native CLI installation](installation/macos-linux.md)
+- [PowerShell installation](installation/powershell.md)
+- [Helm activity-capture deployment](installation/macos-linux.md#optional-in-cluster-activity-capture-with-helm)
+
+## Native CLI
+
+Install with Homebrew or download a release asset, then verify the binary:
+
+```bash
+kubememo version --output json
+kubememo status --output json
+```
+
+## PowerShell
+
+Install from PowerShell Gallery:
 
 ```powershell
 Install-Module -Name KubeMemo -Repository PSGallery -Scope CurrentUser
@@ -8,13 +33,7 @@ Install-Module -Name KubeMemo -Repository PSGallery -Scope CurrentUser
 
 ## Cluster bootstrap
 
-Install the CRDs:
-
-```powershell
-Install-KubeMemo
-```
-
-Install with runtime store support:
+Whichever install path you choose, the next step is bootstrapping the cluster prerequisites:
 
 ```powershell
 Install-KubeMemo -EnableRuntimeStore -RuntimeNamespace kubememo-runtime
@@ -32,7 +51,7 @@ Update installed prerequisites:
 Update-KubeMemo -GitOpsAware
 ```
 
-## Build the Go CLI
+## Build locally
 
 ```bash
 make build
@@ -49,4 +68,5 @@ Run the binary directly:
 - Access to a Kubernetes cluster
 - `kubectl` configured for that cluster
 - For PowerShell workflows: PowerShell 7+
+- For Helm workflows: Helm 3+
 - For docs development: MkDocs Material

@@ -101,6 +101,8 @@ func inferTargetAPIVersion(kind, apiVersion string) string {
 		return "networking.k8s.io/v1"
 	case "horizontalpodautoscaler":
 		return "autoscaling/v2"
+	case "gateway", "httproute":
+		return "gateway.networking.k8s.io/v1"
 	default:
 		if strings.TrimSpace(apiVersion) != "" {
 			return apiVersion
@@ -160,6 +162,7 @@ func (s *Service) TestInstallation(ctx context.Context, runtimeNamespace string)
 	_, nsErr := s.kube.Clientset().CoreV1().Namespaces().Get(ctx, runtimeNamespace, metav1.GetOptions{})
 	status.RuntimeNamespaceInstalled = nsErr == nil
 	status.RbacInstalled = s.testRbac(ctx)
+	status.ActivityCaptureInstalled = s.testActivityCapture(ctx, runtimeNamespace)
 	status.GitOps = s.TestGitOpsMode(ctx)
 	status.RuntimeStore = s.TestRuntimeStore(ctx, runtimeNamespace)
 	return status
@@ -167,6 +170,11 @@ func (s *Service) TestInstallation(ctx context.Context, runtimeNamespace string)
 
 func (s *Service) testRbac(ctx context.Context) bool {
 	_, err := s.kube.Clientset().RbacV1().ClusterRoles().Get(ctx, "kubememo-reader", metav1.GetOptions{})
+	return err == nil
+}
+
+func (s *Service) testActivityCapture(ctx context.Context, runtimeNamespace string) bool {
+	_, err := s.kube.Clientset().AppsV1().Deployments(runtimeNamespace).Get(ctx, "kubememo-activity-capture", metav1.GetOptions{})
 	return err == nil
 }
 
@@ -181,13 +189,20 @@ func (s *Service) GetInstallationStatus(ctx context.Context, runtimeNamespace st
 	return model.InstallationModeStatus{Mode: mode, Status: status}
 }
 
-func (s *Service) Install(ctx context.Context, durableOnly, enableRuntimeStore bool, runtimeNamespace string, installRbac, gitOpsAware bool) (model.InstallationModeStatus, error) {
+func (s *Service) Install(ctx context.Context, durableOnly, enableRuntimeStore bool, runtimeNamespace string, installRbac, gitOpsAware, enableActivityCapture bool, activityCaptureImage string) (model.InstallationModeStatus, error) {
 	if runtimeNamespace == "" {
 		runtimeNamespace = s.cfg.RuntimeNamespace
+	}
+	if strings.TrimSpace(activityCaptureImage) == "" {
+		activityCaptureImage = s.cfg.ActivityCapture.Image
 	}
 	gitOps := s.TestGitOpsMode(ctx)
 	if gitOpsAware && gitOps.Enabled && !enableRuntimeStore {
 		durableOnly = true
+	}
+	if enableActivityCapture {
+		enableRuntimeStore = true
+		installRbac = true
 	}
 	if err := s.kube.ApplyYAML(ctx, assets.DurableCRDYAML, runtimeNamespace); err != nil {
 		return model.InstallationModeStatus{}, err
@@ -205,6 +220,11 @@ func (s *Service) Install(ctx context.Context, durableOnly, enableRuntimeStore b
 			return model.InstallationModeStatus{}, err
 		}
 	}
+	if enableActivityCapture {
+		if err := s.applyActivityCaptureDeployment(ctx, runtimeNamespace, activityCaptureImage); err != nil {
+			return model.InstallationModeStatus{}, err
+		}
+	}
 	status := s.GetInstallationStatus(ctx, runtimeNamespace)
 	if gitOpsAware && gitOps.Enabled && enableRuntimeStore && !status.Status.RuntimeStore.Safe {
 		return model.InstallationModeStatus{}, fmt.Errorf("runtime store is not safe for GitOps mode: %s", status.Status.RuntimeStore.Reason)
@@ -212,8 +232,8 @@ func (s *Service) Install(ctx context.Context, durableOnly, enableRuntimeStore b
 	return status, nil
 }
 
-func (s *Service) Update(ctx context.Context, includeRbac bool, runtimeNamespace string, gitOpsAware bool) (model.InstallationModeStatus, error) {
-	return s.Install(ctx, false, true, runtimeNamespace, includeRbac, gitOpsAware)
+func (s *Service) Update(ctx context.Context, includeRbac bool, runtimeNamespace string, gitOpsAware, enableActivityCapture bool, activityCaptureImage string) (model.InstallationModeStatus, error) {
+	return s.Install(ctx, false, true, runtimeNamespace, includeRbac, gitOpsAware, enableActivityCapture, activityCaptureImage)
 }
 
 func (s *Service) Uninstall(ctx context.Context, runtimeOnly, removeData bool, runtimeNamespace string) (map[string]any, error) {
@@ -224,6 +244,7 @@ func (s *Service) Uninstall(ctx context.Context, runtimeOnly, removeData bool, r
 		"runtimeOnly": runtimeOnly,
 		"removeData":  removeData,
 	}
+	_ = s.kube.Clientset().AppsV1().Deployments(runtimeNamespace).Delete(ctx, "kubememo-activity-capture", metav1.DeleteOptions{})
 	if runtimeOnly {
 		err := s.kube.Clientset().CoreV1().Namespaces().Delete(ctx, runtimeNamespace, metav1.DeleteOptions{})
 		if err != nil && !k8serrors.IsNotFound(err) {
@@ -253,6 +274,90 @@ func (s *Service) Uninstall(ctx context.Context, runtimeOnly, removeData bool, r
 	}
 	result["removed"] = removed
 	return result, nil
+}
+
+func (s *Service) applyActivityCaptureDeployment(ctx context.Context, runtimeNamespace, image string) error {
+	deployment := &unstructured.Unstructured{Object: map[string]any{
+		"apiVersion": "apps/v1",
+		"kind":       "Deployment",
+		"metadata": map[string]any{
+			"name":      "kubememo-activity-capture",
+			"namespace": runtimeNamespace,
+			"labels": map[string]any{
+				"app.kubernetes.io/name":      "kubememo-activity-capture",
+				"app.kubernetes.io/part-of":   "kubememo",
+				"app.kubernetes.io/component": "activity-capture",
+			},
+		},
+		"spec": map[string]any{
+			"replicas": int64(1),
+			"selector": map[string]any{
+				"matchLabels": map[string]any{
+					"app.kubernetes.io/name": "kubememo-activity-capture",
+				},
+			},
+			"template": map[string]any{
+				"metadata": map[string]any{
+					"labels": map[string]any{
+						"app.kubernetes.io/name":      "kubememo-activity-capture",
+						"app.kubernetes.io/part-of":   "kubememo",
+						"app.kubernetes.io/component": "activity-capture",
+					},
+				},
+				"spec": map[string]any{
+					"serviceAccountName":           "kubememo",
+					"automountServiceAccountToken": true,
+					"securityContext": map[string]any{
+						"runAsNonRoot": true,
+						"runAsUser":    int64(65532),
+						"runAsGroup":   int64(65532),
+						"seccompProfile": map[string]any{
+							"type": "RuntimeDefault",
+						},
+					},
+					"containers": []any{
+						map[string]any{
+							"name":            "kubememo",
+							"image":           image,
+							"imagePullPolicy": "IfNotPresent",
+							"args": []any{
+								"watch-activity",
+								"--runtime-namespace", runtimeNamespace,
+							},
+							"securityContext": map[string]any{
+								"allowPrivilegeEscalation": false,
+								"readOnlyRootFilesystem":   true,
+								"capabilities": map[string]any{
+									"drop": []any{"ALL"},
+								},
+							},
+							"resources": map[string]any{
+								"requests": map[string]any{
+									"cpu":    "50m",
+									"memory": "64Mi",
+								},
+								"limits": map[string]any{
+									"cpu":    "250m",
+									"memory": "256Mi",
+								},
+							},
+							"env": []any{
+								map[string]any{
+									"name": "POD_NAMESPACE",
+									"valueFrom": map[string]any{
+										"fieldRef": map[string]any{
+											"fieldPath": "metadata.namespace",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}}
+	return s.kube.ApplyUnstructured(ctx, deployment)
 }
 
 func (s *Service) ListNotes(ctx context.Context, includeRuntime bool, runtimeNamespace string, namespaces []string) ([]model.Note, error) {

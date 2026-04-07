@@ -1,0 +1,90 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: memos.notes.kubememo.io
+spec:
+  group: notes.kubememo.io
+  scope: Namespaced
+  names:
+    plural: memos
+    singular: memo
+    kind: Memo
+    shortNames:
+      - km
+      - memo
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - title
+                - noteType
+                - target
+              properties:
+                title:
+                  type: string
+                summary:
+                  type: string
+                content:
+                  type: string
+                format:
+                  type: string
+                noteType:
+                  type: string
+                severity:
+                  type: string
+                owner:
+                  type: object
+                  properties:
+                    team:
+                      type: string
+                    contact:
+                      type: string
+                target:
+                  type: object
+                  properties:
+                    mode:
+                      type: string
+                    apiVersion:
+                      type: string
+                    kind:
+                      type: string
+                    namespace:
+                      type: string
+                    name:
+                      type: string
+                    appRef:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        instance:
+                          type: string
+                source:
+                  type: object
+                tags:
+                  type: array
+                  items:
+                    type: string
+                links:
+                  type: array
+                  items:
+                    type: object
+                validFrom:
+                  type: string
+                expiresAt:
+                  type: string
+                createdBy:
+                  type: string
+                updatedBy:
+                  type: string
+            status:
+              type: object
+      subresources:
+        status: {}

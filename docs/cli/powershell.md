@@ -1,8 +1,8 @@
-# PowerShell Wrapper
+# PowerShell
 
-KubeMemo still ships as a PowerShell module, but the module is now a thin wrapper over the Go binary.
+KubeMemo also ships as a PowerShell module for users who want PowerShell-native commands on top of the core CLI.
 
-## What the wrapper does
+## What the PowerShell experience does
 
 - Finds the bundled binary for the current OS and architecture
 - Passes through terminal commands for color and TUI support

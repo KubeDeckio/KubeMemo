@@ -84,13 +84,13 @@ func newVersionCmd() *cobra.Command {
 }
 
 func newInstallCmd(opts *rootOptions) *cobra.Command {
-	var output, runtimeNamespace string
-	var durableOnly, enableRuntimeStore, installRbac, gitOpsAware bool
+	var output, runtimeNamespace, activityCaptureImage string
+	var durableOnly, enableRuntimeStore, installRbac, gitOpsAware, enableActivityCapture bool
 	cmd := &cobra.Command{
 		Use:   "install",
 		Short: "Install KubeMemo cluster prerequisites",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			status, err := opts.service.Install(context.Background(), durableOnly, enableRuntimeStore, runtimeNamespace, installRbac, gitOpsAware)
+			status, err := opts.service.Install(context.Background(), durableOnly, enableRuntimeStore, runtimeNamespace, installRbac, gitOpsAware, enableActivityCapture, activityCaptureImage)
 			if err != nil {
 				return err
 			}
@@ -101,6 +101,8 @@ func newInstallCmd(opts *rootOptions) *cobra.Command {
 	cmd.Flags().BoolVar(&enableRuntimeStore, "enable-runtime-store", false, "Install the runtime store")
 	cmd.Flags().BoolVar(&installRbac, "install-rbac", false, "Install bundled RBAC")
 	cmd.Flags().BoolVar(&gitOpsAware, "gitops-aware", false, "Adjust install behavior for GitOps clusters")
+	cmd.Flags().BoolVar(&enableActivityCapture, "enable-activity-capture", false, "Install the optional in-cluster activity capture deployment")
+	cmd.Flags().StringVar(&activityCaptureImage, "activity-capture-image", opts.cfg.ActivityCapture.Image, "Container image for in-cluster activity capture")
 	cmd.Flags().StringVar(&runtimeNamespace, "runtime-namespace", opts.cfg.RuntimeNamespace, "Runtime namespace")
 	addOutputFlag(cmd, &output)
 	return cmd
@@ -128,13 +130,13 @@ func newUninstallCmd(opts *rootOptions) *cobra.Command {
 }
 
 func newUpdateCmd(opts *rootOptions) *cobra.Command {
-	var output, runtimeNamespace string
-	var includeRbac, gitOpsAware bool
+	var output, runtimeNamespace, activityCaptureImage string
+	var includeRbac, gitOpsAware, enableActivityCapture bool
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: "Update installed KubeMemo prerequisites",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			status, err := opts.service.Update(context.Background(), includeRbac, runtimeNamespace, gitOpsAware)
+			status, err := opts.service.Update(context.Background(), includeRbac, runtimeNamespace, gitOpsAware, enableActivityCapture, activityCaptureImage)
 			if err != nil {
 				return err
 			}
@@ -143,6 +145,8 @@ func newUpdateCmd(opts *rootOptions) *cobra.Command {
 	}
 	cmd.Flags().BoolVar(&includeRbac, "include-rbac", false, "Update RBAC resources as well")
 	cmd.Flags().BoolVar(&gitOpsAware, "gitops-aware", false, "Adjust update behavior for GitOps clusters")
+	cmd.Flags().BoolVar(&enableActivityCapture, "enable-activity-capture", false, "Install or update the optional in-cluster activity capture deployment")
+	cmd.Flags().StringVar(&activityCaptureImage, "activity-capture-image", opts.cfg.ActivityCapture.Image, "Container image for in-cluster activity capture")
 	cmd.Flags().StringVar(&runtimeNamespace, "runtime-namespace", opts.cfg.RuntimeNamespace, "Runtime namespace")
 	addOutputFlag(cmd, &output)
 	return cmd

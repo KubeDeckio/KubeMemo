@@ -61,15 +61,19 @@ edit_uri: edit/main/docs/
 nav:
   - Home: index.md
   - Getting Started: getting-started.md
-  - Installation: installation.md
+  - Installation:
+      - Overview: installation.md
+      - Native CLI: installation/macos-linux.md
+      - PowerShell: installation/powershell.md
   - CLI:
       - Overview: cli/index.md
       - TUI: cli/tui.md
-      - PowerShell Wrapper: cli/powershell.md
+      - PowerShell: cli/powershell.md
   - Concepts:
       - Durable vs Runtime Memos: concepts/stores.md
       - GitOps Behavior: concepts/gitops.md
       - Annotations: concepts/annotations.md
+      - kubectl Describe View: concepts/describe-view.md
   - Reference:
       - Commands: reference/commands.md
       - CRDs: reference/crds.md

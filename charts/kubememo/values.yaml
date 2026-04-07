@@ -1,0 +1,53 @@
+image:
+  repository: ghcr.io/kubedeckio/kubememo
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+activityCapture:
+  enabled: false
+  runtimeNamespace: ""
+  namespaces: []
+  kinds: []
+
+serviceAccount:
+  create: true
+  name: ""
+
+rbac:
+  create: true
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  fsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
+networkPolicy:
+  enabled: false

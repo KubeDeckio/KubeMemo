@@ -58,6 +58,7 @@ type InstallationStatus struct {
 	RuntimeCrdInstalled       bool              `json:"runtimeCrdInstalled"`
 	RuntimeNamespaceInstalled bool              `json:"runtimeNamespaceInstalled"`
 	RbacInstalled             bool              `json:"rbacInstalled"`
+	ActivityCaptureInstalled  bool              `json:"activityCaptureInstalled"`
 	GitOps                    GitOpsState       `json:"gitOps"`
 	RuntimeStore              RuntimeStoreState `json:"runtimeStore"`
 }

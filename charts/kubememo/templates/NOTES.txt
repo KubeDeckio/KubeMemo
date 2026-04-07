@@ -1,0 +1,9 @@
+KubeMemo chart installed.
+
+If activity capture is enabled, verify the Deployment:
+
+  kubectl get deploy -n {{ .Release.Namespace }} {{ include "kubememo.fullname" . }}-activity-capture
+
+Check the runtime memos:
+
+  kubectl get runtimememos -n {{ include "kubememo.runtimeNamespace" . }}

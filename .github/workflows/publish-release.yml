@@ -81,6 +81,7 @@ jobs:
           done
 
           tar -C dist/module -czf "$release_dir/KubeMemo-psmodule_${version}.tar.gz" KubeMemo
+          tar -C charts -czf "$release_dir/kubememo-chart_${version}.tgz" kubememo
           (
             cd "$release_dir"
             sha256sum ./* > checksums.txt
@@ -94,3 +95,41 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  update-homebrew:
+    needs: build-and-release
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.ref_name }}
+    steps:
+      - name: Download source archive
+        run: |
+          set -euo pipefail
+          curl -L -o source.tar.gz "https://github.com/${{ github.repository }}/archive/refs/tags/${TAG}.tar.gz"
+          echo "SOURCE_SHA=$(sha256sum source.tar.gz | awk '{print $1}')" >> $GITHUB_ENV
+
+      - name: Checkout homebrew tap
+        uses: actions/checkout@v4
+        with:
+          repository: KubeDeckio/homebrew-tap
+          token: ${{ secrets.BREW_BUMP_TOKEN }}
+          path: homebrew-tap
+
+      - name: Update formula
+        working-directory: homebrew-tap
+        run: |
+          set -euo pipefail
+          version="${TAG#v}"
+          formula="Formula/kubememo.rb"
+          url="https://github.com/${{ github.repository }}/archive/refs/tags/${TAG}.tar.gz"
+
+          sed -i.bak "s|url \".*\"|url \"$url\"|" "$formula"
+          sed -i.bak "s|sha256 \".*\"|sha256 \"$SOURCE_SHA\"|" "$formula"
+          sed -i.bak "s|version \".*\"|version \"$version\"|" "$formula" || true
+          rm -f "$formula.bak"
+
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add "$formula"
+          git commit -m "Bump kubememo formula to ${TAG}" || exit 0
+          git push

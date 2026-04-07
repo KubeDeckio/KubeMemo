@@ -1,0 +1,67 @@
+{{- if .Values.activityCapture.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kubememo.fullname" . }}-activity-capture
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ include "kubememo.name" . }}
+    helm.sh/chart: {{ include "kubememo.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/component: activity-capture
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "kubememo.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: activity-capture
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "kubememo.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: activity-capture
+    spec:
+      serviceAccountName: {{ include "kubememo.serviceAccountName" . }}
+      automountServiceAccountToken: true
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: kubememo
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - watch-activity
+            - --runtime-namespace
+            - {{ include "kubememo.runtimeNamespace" . | quote }}
+          {{- range .Values.activityCapture.namespaces }}
+            - --namespace
+            - {{ . | quote }}
+          {{- end }}
+          {{- range .Values.activityCapture.kinds }}
+            - --kind
+            - {{ . | quote }}
+          {{- end }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

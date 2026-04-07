@@ -44,6 +44,33 @@ rules:
     verbs: ["get", "patch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubememo-activity-capture
+rules:
+  - apiGroups: [""]
+    resources: ["services", "namespaces"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "statefulsets", "daemonsets", "replicasets"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["autoscaling"]
+    resources: ["horizontalpodautoscalers"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["gateway.networking.k8s.io"]
+    resources: ["gateways", "httproutes"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["notes.kubememo.io"]
+    resources: ["memos"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["runtime.notes.kubememo.io"]
+    resources: ["runtimememos"]
+    verbs: ["create", "update", "patch", "delete", "get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: kubememo-reader
@@ -51,6 +78,19 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: kubememo-reader
+subjects:
+  - kind: ServiceAccount
+    name: kubememo
+    namespace: kubememo-runtime
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kubememo-activity-capture
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kubememo-activity-capture
 subjects:
   - kind: ServiceAccount
     name: kubememo

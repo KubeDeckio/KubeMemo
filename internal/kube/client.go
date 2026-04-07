@@ -43,19 +43,23 @@ func New() (*Client, error) {
 	overrides := &clientcmd.ConfigOverrides{}
 	clientConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(configLoadingRules, overrides)
 
-	rawConfig, err := clientConfig.RawConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	namespace, _, err := clientConfig.Namespace()
-	if err != nil || strings.TrimSpace(namespace) == "" {
-		namespace = "default"
-	}
-
+	rawConfig, rawErr := clientConfig.RawConfig()
+	namespace, _, nsErr := clientConfig.Namespace()
 	restConfig, err := clientConfig.ClientConfig()
 	if err != nil {
-		return nil, err
+		restConfig, err = rest.InClusterConfig()
+		if err != nil {
+			if rawErr != nil {
+				return nil, rawErr
+			}
+			return nil, err
+		}
+		if strings.TrimSpace(namespace) == "" {
+			namespace = os.Getenv("POD_NAMESPACE")
+		}
+	}
+	if strings.TrimSpace(namespace) == "" || nsErr != nil {
+		namespace = "default"
 	}
 	restConfig.Timeout = 20 * time.Second
 
