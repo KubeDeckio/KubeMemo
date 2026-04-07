@@ -231,9 +231,7 @@ jobs:
           version="${TAG#v}"
           formula="Formula/kubememo.rb"
           url="https://github.com/${{ github.repository }}/archive/refs/tags/${TAG}.tar.gz"
-
-          if [ ! -f "$formula" ]; then
-            cat >"$formula" <<EOF
+          cat >"$formula" <<EOF
           class Kubememo < Formula
             desc "Kubernetes operational memory with durable memos, runtime notes, and activity capture"
             homepage "https://kubememo.kubedeck.io"
@@ -243,19 +241,14 @@ jobs:
             depends_on "go" => :build
 
             def install
-              system "go", "build", "-trimpath", "-ldflags", "-s -w -X main.version=v${version}", "-o", bin/"kubememo", "./cmd/kubememo"
+              system "go", "build", "-trimpath", "-ldflags", "-s -w -X github.com/KubeDeckio/KubeMemo/internal/cli.version=${version}", "-o", bin/"kubememo", "./cmd/kubememo"
             end
 
             test do
-              assert_match "kubememo", shell_output("#{bin}/kubememo version")
+              assert_match "\"version\": \"${version}\"", shell_output("#{bin}/kubememo version")
             end
           end
           EOF
-          else
-            sed -i.bak "s|url \".*\"|url \"$url\"|" "$formula"
-            sed -i.bak "s|sha256 \".*\"|sha256 \"$SOURCE_SHA\"|" "$formula"
-            rm -f "$formula.bak"
-          fi
 
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
