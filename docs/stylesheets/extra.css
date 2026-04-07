@@ -310,6 +310,7 @@ body {
   position: fixed !important;
   inset: auto 1.25rem 1.25rem auto !important;
   z-index: 40;
+  margin: 0 !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -379,6 +380,7 @@ body {
   box-shadow: 0 0 0 2px rgba(2, 186, 255, 0.22), 0 18px 32px rgba(2, 12, 27, 0.24);
 }
 
+.md-top.kb-top-visible,
 .kb-top-visible {
   opacity: 1 !important;
   transform: translateY(0) !important;
@@ -428,6 +430,7 @@ body {
   margin: 0 auto 1rem;
   color: #ffffff;
   font-size: clamp(2.5rem, 5vw, 4.4rem);
+  line-height: 1.1;
 }
 
 .km-hero p {
@@ -493,6 +496,12 @@ body {
   margin: 0 auto;
 }
 
+.km-section__inner > h2 {
+  margin-bottom: 1rem;
+  text-align: center;
+  font-size: clamp(2rem, 3.2vw, 2.6rem);
+}
+
 .km-band {
   background: linear-gradient(180deg, rgba(7, 25, 46, 0.92), rgba(10, 30, 56, 0.92));
 }
@@ -537,8 +546,8 @@ body {
 .km-step p,
 .km-memo-preview__body,
 .km-callout {
-  font-size: 1rem;
-  line-height: 1.7;
+  font-size: 1.08rem;
+  line-height: 1.75;
 }
 
 .km-card h2,
@@ -547,6 +556,7 @@ body {
 .km-memo-preview h3 {
   margin-top: 0;
   color: #5ad6ff;
+  font-size: 1.38rem;
 }
 
 .km-card__eyebrow {
@@ -575,6 +585,15 @@ body {
 .km-panel ul {
   margin: 0;
   padding-left: 1.1rem;
+}
+
+.km-panel p,
+.km-step p,
+.km-card p,
+.km-callout,
+.km-final-cta p,
+.km-cta-band p {
+  font-size: 1.08rem;
 }
 
 .km-memo-preview {
@@ -704,9 +723,12 @@ body {
 .km-comparison {
   display: grid;
   gap: 1.4rem;
+  justify-items: center;
 }
 
 .km-comparison__table-wrap {
+  width: 100%;
+  max-width: 1080px;
   overflow-x: auto;
   border: 1px solid rgba(90, 214, 255, 0.16);
   border-radius: 22px;
@@ -716,16 +738,18 @@ body {
 
 .km-comparison__table {
   width: 100%;
-  min-width: 760px;
+  min-width: 860px;
   border-collapse: separate;
   border-spacing: 0;
+  table-layout: fixed;
 }
 
 .km-comparison__table th,
 .km-comparison__table td {
   padding: 1rem 1.05rem;
   border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-  text-align: left;
+  text-align: center;
+  vertical-align: middle;
 }
 
 .km-comparison__table th {
@@ -741,6 +765,12 @@ body {
   color: #dce9fb;
 }
 
+.km-comparison__table th:first-child,
+.km-comparison__table td:first-child {
+  width: 32%;
+  text-align: left;
+}
+
 .km-comparison__table tbody tr td:nth-child(2) {
   color: #5ad6ff;
   font-weight: 700;
@@ -748,6 +778,34 @@ body {
 
 .km-comparison__table tbody tr:last-child td {
   border-bottom: 0;
+}
+
+.km-compare-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 5.75rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.km-compare-pill--yes {
+  background: rgba(34, 197, 94, 0.14);
+  color: #8ef0b2;
+}
+
+.km-compare-pill--partial {
+  background: rgba(245, 158, 11, 0.14);
+  color: #ffd27b;
+}
+
+.km-compare-pill--no {
+  background: rgba(248, 113, 113, 0.14);
+  color: #ffb0b0;
 }
 
 .km-cta-band {
@@ -801,6 +859,14 @@ body {
 
   .km-hero {
     padding: 5rem 1rem 4rem;
+  }
+
+  .km-hero h1 {
+    font-size: clamp(2.2rem, 8vw, 3.1rem);
+  }
+
+  .km-hero p {
+    font-size: 1rem;
   }
 
   .km-section {
