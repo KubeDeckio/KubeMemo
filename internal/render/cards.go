@@ -76,6 +76,9 @@ func RenderNoteCard(note model.Note, width int, color bool) string {
 		context = "Owner: " + firstNonEmpty(strings.TrimSpace(strings.TrimSpace(note.OwnerTeam+" "+note.OwnerContact)), note.CreatedBy, "curated memo")
 	}
 	lines = append(lines, mergeStyle(style.subtle, style.paper).Width(bodyWidth).Render(context))
+	if authorship := authorshipLabel(note); authorship != "" {
+		lines = append(lines, mergeStyle(style.subtle, style.paper).Width(bodyWidth).Render(authorship))
+	}
 	lines = append(lines, style.paper.Width(bodyWidth).Render(""))
 
 	if note.StoreType == "Runtime" {
@@ -334,6 +337,19 @@ func firstNonEmpty(values ...string) string {
 		}
 	}
 	return ""
+}
+
+func authorshipLabel(note model.Note) string {
+	updatedBy := strings.TrimSpace(note.UpdatedBy)
+	createdBy := strings.TrimSpace(note.CreatedBy)
+	switch {
+	case updatedBy != "" && updatedBy != createdBy:
+		return "Updated by: " + updatedBy
+	case createdBy != "":
+		return "Created by: " + createdBy
+	default:
+		return ""
+	}
 }
 
 func maxInt(a, b int) int {

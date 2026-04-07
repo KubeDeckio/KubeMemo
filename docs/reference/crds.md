@@ -24,3 +24,7 @@ kubectl get runtimememos -A
 kubectl get km -A
 kubectl get kmr -A
 ```
+
+For full YAML examples for `Memo` and `RuntimeMemo`, see:
+
+- [Example manifests](manifests.md)

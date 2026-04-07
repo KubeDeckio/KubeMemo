@@ -14,6 +14,10 @@ Durable notes should usually be treated as Git-managed. KubeMemo supports manife
 
 Runtime memos are only safe when the runtime store is outside GitOps reconciliation scope.
 
+If you want concrete YAML examples for Git-managed durable memos and cluster-managed runtime memos, see:
+
+- [Example manifests](../reference/manifests.md)
+
 ## Practical rule
 
 - Durable store: curated source of truth

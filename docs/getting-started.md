@@ -12,7 +12,14 @@ KubeMemo is a standalone Kubedeck tool for attaching durable and runtime context
 
 ## Quick start
 
-Install the cluster prerequisites:
+Install KubeMemo from PowerShell Gallery:
+
+```powershell
+Install-Module -Name KubeMemo -Repository PSGallery -Scope CurrentUser
+Import-Module KubeMemo
+```
+
+Bootstrap the cluster prerequisites:
 
 ```powershell
 Install-KubeMemo -EnableRuntimeStore -RuntimeNamespace kubememo-runtime

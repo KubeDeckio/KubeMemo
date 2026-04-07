@@ -237,7 +237,7 @@ func newShowCmd(opts *rootOptions) *cobra.Command {
 		Use:   "show",
 		Short: "Render memos as terminal cards",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			notes, err := opts.service.FindNotes(context.Background(), "", "", kind, namespace, name, includeRuntime, true, runtimeNamespace)
+			notes, err := opts.service.FindNotes(context.Background(), "", "", kind, namespace, name, includeRuntime, false, runtimeNamespace)
 			if err != nil {
 				return err
 			}

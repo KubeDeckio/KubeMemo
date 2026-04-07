@@ -80,6 +80,7 @@ nav:
   - Reference:
       - Commands: reference/commands.md
       - CRDs: reference/crds.md
+      - Example Manifests: reference/manifests.md
   - Changelog: changelog.md
   - KubeDeck: https://kubedeck.io
 

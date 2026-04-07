@@ -276,7 +276,7 @@ func (m modelState) scopeText() string {
 
 func buildRows(ctx context.Context, svc *service.Service, opts Options, textFilter, kindFilter, namespaceFilter string) ([]table.Row, []model.Note, error) {
 	namespace := strings.TrimSpace(namespaceFilter)
-	notes, err := svc.FindNotes(ctx, textFilter, "", kindFilter, namespace, "", opts.IncludeRuntime, true, opts.RuntimeNamespace)
+	notes, err := svc.FindNotes(ctx, textFilter, "", kindFilter, namespace, "", opts.IncludeRuntime, false, opts.RuntimeNamespace)
 	if err != nil {
 		return nil, nil, err
 	}
