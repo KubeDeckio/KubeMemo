@@ -24,8 +24,69 @@ jobs:
       - name: Run Go tests
         run: go test ./...
 
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install docs dependencies
+        run: python -m pip install -r requirements-docs.txt
+
+      - name: Update changelog
+        run: cat CHANGELOG.md > docs/changelog.md
+
+      - name: Build docs
+        run: mkdocs build --strict
+
+  helm-template:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.15.4
+
+      - name: Render chart
+        run: |
+          helm template kubememo ./charts/kubememo \
+            --namespace kubememo-runtime \
+            --set activityCapture.enabled=true
+
+  integration-kind:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Create Kind cluster
+        uses: helm/kind-action@v1.10.0
+
+      - name: Run cluster-backed integration tests
+        run: |
+          KUBEMEMO_INTEGRATION=1 go test ./internal/service \
+            -run 'TestClusterSmokeInstallCreateExportAndCleanup|TestRestrictedServiceAccountCanCreateMemoButCannotPatchAnnotations' \
+            -count=1 -v
+
   docker-build:
-    needs: go-test
+    needs:
+      - go-test
+      - docs
+      - helm-template
+      - integration-kind
     runs-on: ubuntu-latest
     permissions:
       contents: read
