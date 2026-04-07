@@ -884,16 +884,6 @@ body {
 }
 
 /* KubeMemo homepage refresh */
-.md-typeset {
-  font-size: 0.98rem;
-  line-height: 1.8;
-}
-
-.md-typeset p,
-.md-typeset li {
-  font-size: 1rem;
-}
-
 .km-home-hero {
   position: relative;
   overflow: hidden;
