@@ -241,8 +241,7 @@ func newShowCmd(opts *rootOptions) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Println(render.RenderNotes(notes, render.CardOptions{Header: true, NoColor: noColor, Width: 78}))
-			return nil
+			return writeMaybePaged(render.RenderNotes(notes, render.CardOptions{Header: true, NoColor: noColor, Width: 78}))
 		},
 	}
 	cmd.Flags().StringVar(&kind, "kind", "", "Target kind")
