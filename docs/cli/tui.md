@@ -20,18 +20,24 @@ Open-KubeMemoTui
 - Auto-refreshes by default
 - Supports namespace, kind, and text filtering
 - Uses a split memo-board layout with detail pane rendering
+- Sorts by recent memo activity by default
+- Shows current access posture in the header and status line so RBAC limitations are visible while browsing
 
 ## Navigation
 
 ```text
 [Arrows]/[j][k] move
+[g]/[G] jump top/end
 [PgUp]/[PgDn] or [u][d] scroll
 [/] text filter
-[:] switch view
-[f] namespace filter
+[n] namespace filter
 [c] kind filter
-[a] add temporary memo
+[a]/[m]/[t] all/durable/runtime
+[s] cycle sort
+[[]/[]] previous/next page
+[x] clear filters
 [r] refresh
+[?] help
 [q] quit
 ```
 

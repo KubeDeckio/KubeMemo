@@ -8,6 +8,18 @@ It is intentionally short and product-focused. The goal is to keep the next rele
 
 The focus for `v0.0.2` should be making KubeMemo feel more production-ready in day-to-day Kubernetes operations.
 
+### Status after v0.0.1 hardening
+
+Some of the original `v0.0.2` ideas were already pulled forward into `v0.0.1`.
+
+- GitOps export/import structure is already much better than the original first draft.
+- RBAC-aware errors and capability reporting are already much stronger.
+- The TUI already has filtering, detail scrolling, and better navigation than first planned.
+- Cluster-backed smoke tests and Kind-gated release validation are already in place.
+- Expired runtime memos are already hidden from normal views by default.
+
+That means `v0.0.2` is now more about deepening those areas than introducing them for the first time.
+
 ### Goals
 
 - make activity capture more reliable and easier to operate
@@ -33,12 +45,22 @@ The focus for `v0.0.2` should be making KubeMemo feel more production-ready in d
 - improve GitOps mode detection and user-facing guidance
 - make runtime-store safety checks more explicit
 
+Current state:
+
+- structured export/import is already in place
+- the main remaining work is better edit/remove Git-managed output
+
 #### 3. RBAC and permissions UX
 
 - improve permission-specific error messages
 - make read/write/patch capability reporting more explicit
 - improve namespace-scoped and partial-visibility behavior
 - surface capability limits more clearly in the TUI and status commands
+
+Current state:
+
+- permission errors and capability summaries are already much improved
+- the main remaining work is more TUI visibility/scope messaging and broader real-cluster RBAC validation
 
 #### 4. TUI and rendering polish
 
@@ -47,12 +69,22 @@ The focus for `v0.0.2` should be making KubeMemo feel more production-ready in d
 - continue improving the memo-board and detail-pane UX
 - refine terminal rendering for long content and narrow terminals
 
+Current state:
+
+- filtering, jump keys, help, and detail scrolling are already in place
+- the main remaining work is grouping/paging for busier clusters and further density polish
+
 #### 5. Testing and release confidence
 
 - add more cluster-backed integration tests
 - add workflow validation for release packaging paths
 - add more coverage for annotations, GitOps, and activity capture
 - improve release and install smoke-test guidance
+
+Current state:
+
+- cluster-backed smoke tests and Kind-gated release validation are already in place
+- the main remaining work is broader activity-capture, GitOps, and packaging verification
 
 ## Later
 

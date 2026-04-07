@@ -224,13 +224,17 @@ TUI shortcuts:
 
 ```text
 [Arrows]/[j][k] move
+[g]/[G] jump top/end
 [PgUp]/[PgDn] or [u][d] scroll the detail pane
 [/] text filter
-[:] switch view (:memo, :runtimememo, :all)
-[f] namespace filter
+[n] namespace filter
 [c] kind filter
-[a] add a temporary runtime memo
+[a]/[m]/[t] all, durable, runtime views
+[s] cycle sort
+[[]/[]] previous/next page
+[x] clear filters
 [r] refresh
+[?] help
 [q] quit
 ```
 

@@ -10,6 +10,8 @@
 
 `Test-KubeMemoInstallation` and `Get-KubeMemoInstallationStatus` now include capability summaries so you can see whether the current identity can read durable memos, write runtime memos, patch annotations, and run always-on activity capture safely.
 
+`Open-KubeMemoTui` also surfaces a compact access summary in the header and status line so namespace-scoped or read-only sessions are obvious while browsing.
+
 ## Read and search
 
 - `Get-KubeMemo`

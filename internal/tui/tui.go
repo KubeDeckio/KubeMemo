@@ -3,6 +3,7 @@ package tui
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -25,6 +26,7 @@ type Options struct {
 
 type modelState struct {
 	service         *service.Service
+	allNotes        []model.Note
 	opts            Options
 	notes           []model.Note
 	table           table.Model
@@ -34,7 +36,10 @@ type modelState struct {
 	kindFilter      string
 	namespaceFilter string
 	storeFilter     string
+	sortMode        string
 	textFilter      string
+	page            int
+	installStatus   *model.InstallationModeStatus
 	width           int
 	height          int
 	showHelp        bool
@@ -76,10 +81,11 @@ func newModel(ctx context.Context, svc *service.Service, opts Options) (modelSta
 	ti.Placeholder = "filter"
 	ti.Blur()
 	vp := viewport.New(40, 20)
-	rows, notes, err := buildRows(ctx, svc, opts, "", "", "", "")
+	notes, err := buildNotes(ctx, svc, opts, "", "", "", "", "recent")
 	if err != nil {
 		return modelState{}, err
 	}
+	rows := buildTableRows(notes)
 	tbl := table.New(
 		table.WithColumns([]table.Column{
 			{Title: "SRC", Width: 5},
@@ -94,13 +100,18 @@ func newModel(ctx context.Context, svc *service.Service, opts Options) (modelSta
 	tbl.SetStyles(defaultTableStyles())
 	m := modelState{
 		service:     svc,
+		allNotes:    notes,
 		opts:        opts,
 		notes:       notes,
 		table:       tbl,
 		viewport:    vp,
 		filterInput: ti,
 		storeFilter: "all",
+		sortMode:    "recent",
 	}
+	status := svc.GetInstallationStatus(ctx, opts.RuntimeNamespace)
+	m.installStatus = &status
+	m.applyPage()
 	m.updateViewport()
 	return m, nil
 }
@@ -118,18 +129,16 @@ func (m modelState) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		footerHeight := 3
 		contentHeight := max(8, msg.Height-headerHeight-footerHeight)
 		m.updateLayout(contentHeight)
+		m.applyPage()
 		m.updateViewport()
 		return m, nil
 	case refreshMsg:
-		rows, notes, err := buildRows(context.Background(), m.service, m.opts, m.textFilter, m.kindFilter, m.namespaceFilter, m.storeFilter)
+		notes, err := buildNotes(context.Background(), m.service, m.opts, m.textFilter, m.kindFilter, m.namespaceFilter, m.storeFilter, m.sortMode)
 		if err == nil {
-			m.notes = notes
-			m.table.SetRows(rows)
-			if len(rows) == 0 {
-				m.table.SetCursor(0)
-			} else if m.table.Cursor() >= len(rows) {
-				m.table.SetCursor(len(rows) - 1)
-			}
+			m.allNotes = notes
+			status := m.service.GetInstallationStatus(context.Background(), m.opts.RuntimeNamespace)
+			m.installStatus = &status
+			m.applyPage()
 			m.updateViewport()
 		} else {
 			m.err = err
@@ -214,16 +223,37 @@ func (m modelState) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.storeFilter = "all"
 			return m, func() tea.Msg { return refreshMsg{} }
 		case "g", "home":
+			m.page = 0
+			m.applyPage()
 			m.table.SetCursor(0)
 			m.updateViewport()
 			return m, nil
 		case "G", "end":
-			if len(m.notes) > 0 {
-				m.table.SetCursor(len(m.notes) - 1)
+			if len(m.allNotes) > 0 {
+				m.page = max(0, m.pageCount()-1)
+				m.applyPage()
+				m.table.SetCursor(max(0, len(m.notes)-1))
+				m.updateViewport()
+			}
+			return m, nil
+		case "]":
+			if m.page < m.pageCount()-1 {
+				m.page++
+				m.applyPage()
+				m.updateViewport()
+			}
+			return m, nil
+		case "[":
+			if m.page > 0 {
+				m.page--
+				m.applyPage()
 				m.updateViewport()
 			}
 			return m, nil
 		case "r":
+			return m, func() tea.Msg { return refreshMsg{} }
+		case "s":
+			m.sortMode = nextSortMode(m.sortMode)
 			return m, func() tea.Msg { return refreshMsg{} }
 		}
 		var cmd tea.Cmd
@@ -237,11 +267,12 @@ func (m modelState) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m modelState) View() string {
 	header := m.renderHeader()
 	listTitle := lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("45")).Render(fmt.Sprintf(" LIST  %d ", len(m.notes)))
+	listMeta := lipgloss.NewStyle().Foreground(lipgloss.Color("110")).Render(fmt.Sprintf(" sort:%s page:%d/%d", m.sortMode, m.page+1, max(1, m.pageCount())))
 	detailTitle := lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("45")).Render(" DETAIL ")
 	if note := m.selectedNote(); note != nil {
 		detailTitle = lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("45")).Render(" DETAIL  " + render.TargetLabel(*note) + " ")
 	}
-	left := listTitle + "\n" + m.table.View()
+	left := listTitle + listMeta + "\n" + m.table.View()
 	right := detailTitle + m.renderDetailMeta() + "\n" + m.viewport.View()
 	content := lipgloss.JoinHorizontal(lipgloss.Top, lipgloss.NewStyle().Width(max(48, m.width/2)).Render(left), "  ", lipgloss.NewStyle().Width(max(32, m.width-max(48, m.width/2)-4)).Render(right))
 	status := lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("109")).Render(" STATUS " + m.statusText() + " ")
@@ -275,7 +306,11 @@ func (m modelState) renderHeader() string {
 	view := lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("214")).Render(" VIEW " + store + " ")
 	runtime := lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("45")).Render(" RUNTIME " + displayNone(m.opts.RuntimeNamespace) + " ")
 	counts := lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("109")).Render(fmt.Sprintf(" COUNT %d ", len(m.notes)))
-	metaBlock := strings.Join([]string{scope, filters, kind, view, runtime, counts}, "\n")
+	breakdown := lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("141")).Render(m.countBreakdown())
+	sortMode := lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("74")).Render(" SORT " + m.sortMode + " ")
+	paging := lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("68")).Render(fmt.Sprintf(" PAGE %d/%d ", m.page+1, max(1, m.pageCount())))
+	access := lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("181")).Render(" ACCESS " + m.accessText() + " ")
+	metaBlock := strings.Join([]string{scope, filters, kind, view, runtime, counts, breakdown, sortMode, paging, access}, "\n")
 
 	if m.width >= 118 && bannerVariant(m.width, m.height) != "text" {
 		leftWidth := max(50, m.width-42)
@@ -302,6 +337,8 @@ func (m modelState) renderFooterKeys() string {
 		key.Render(" n ") + desc.Render(" ns"),
 		key.Render(" c ") + desc.Render(" kind"),
 		key.Render(" a / m / t ") + desc.Render(" all/durable/runtime"),
+		key.Render(" s ") + desc.Render(" sort"),
+		key.Render(" [ / ] ") + desc.Render(" page"),
 		key.Render(" x ") + desc.Render(" clear"),
 		key.Render(" r ") + desc.Render(" refresh"),
 		key.Render(" ? ") + desc.Render(" help"),
@@ -337,6 +374,8 @@ func (m modelState) renderHelp() string {
 	lines := []string{
 		"[/] text filter  [n] namespace filter  [c] kind filter",
 		"[a] all memos  [m] durable only  [t] runtime only  [x] clear filters",
+		"[s] cycle sort: recent, namespace, type, title",
+		"[[ ] previous/next page for large memo sets",
 		"[j][k] or arrows move  [g]/[G] jump top/end  [u][d] or [PgUp]/[PgDn] scroll detail",
 		"[r] refresh  [q] quit",
 	}
@@ -354,9 +393,44 @@ func (m modelState) statusText() string {
 	}
 	total := len(m.notes)
 	if total == 0 {
-		return "Empty"
+		return "Empty | " + m.accessText()
 	}
-	return fmt.Sprintf("%d/%d", m.table.Cursor()+1, total)
+	absolute := (m.page * m.pageSize()) + m.table.Cursor() + 1
+	return fmt.Sprintf("%d/%d | %s", absolute, len(m.allNotes), m.accessText())
+}
+
+func (m modelState) countBreakdown() string {
+	var durable, runtime int
+	for _, note := range m.notes {
+		if note.StoreType == "Runtime" {
+			runtime++
+		} else {
+			durable++
+		}
+	}
+	return fmt.Sprintf(" DUR %d  RUN %d ", durable, runtime)
+}
+
+func (m modelState) pageSize() int {
+	if m.table.Height() > 0 {
+		return m.table.Height()
+	}
+	return 12
+}
+
+func (m modelState) pageCount() int {
+	size := m.pageSize()
+	if size <= 0 || len(m.allNotes) == 0 {
+		return 1
+	}
+	count := len(m.allNotes) / size
+	if len(m.allNotes)%size != 0 {
+		count++
+	}
+	if count < 1 {
+		return 1
+	}
+	return count
 }
 
 func (m *modelState) updateLayout(contentHeight int) {
@@ -372,6 +446,36 @@ func (m *modelState) updateLayout(contentHeight int) {
 	})
 	m.viewport.Width = max(32, m.width-listWidth-4)
 	m.viewport.Height = contentHeight
+}
+
+func (m *modelState) applyPage() {
+	pageCount := m.pageCount()
+	if pageCount < 1 {
+		pageCount = 1
+	}
+	if m.page >= pageCount {
+		m.page = pageCount - 1
+	}
+	if m.page < 0 {
+		m.page = 0
+	}
+
+	size := m.pageSize()
+	start := m.page * size
+	if start > len(m.allNotes) {
+		start = len(m.allNotes)
+	}
+	end := start + size
+	if end > len(m.allNotes) {
+		end = len(m.allNotes)
+	}
+	m.notes = append([]model.Note(nil), m.allNotes[start:end]...)
+	m.table.SetRows(buildTableRows(m.notes))
+	if len(m.notes) == 0 {
+		m.table.SetCursor(0)
+	} else if m.table.Cursor() >= len(m.notes) {
+		m.table.SetCursor(len(m.notes) - 1)
+	}
 }
 
 func (m *modelState) updateViewport() {
@@ -415,13 +519,13 @@ func (m modelState) scopeText() string {
 	return "all accessible namespaces"
 }
 
-func buildRows(ctx context.Context, svc *service.Service, opts Options, textFilter, kindFilter, namespaceFilter, storeFilter string) ([]table.Row, []model.Note, error) {
+func buildNotes(ctx context.Context, svc *service.Service, opts Options, textFilter, kindFilter, namespaceFilter, storeFilter, sortMode string) ([]model.Note, error) {
 	namespace := strings.TrimSpace(namespaceFilter)
 	notes, err := svc.FindNotes(ctx, textFilter, "", kindFilter, namespace, "", opts.IncludeRuntime, false, opts.RuntimeNamespace)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	rows := make([]table.Row, 0, len(notes))
+	sortNotes(notes, sortMode)
 	filtered := make([]model.Note, 0, len(notes))
 	for _, note := range notes {
 		if storeFilter == "durable" && note.StoreType != "Durable" {
@@ -430,14 +534,78 @@ func buildRows(ctx context.Context, svc *service.Service, opts Options, textFilt
 		if storeFilter == "runtime" && note.StoreType != "Runtime" {
 			continue
 		}
+		filtered = append(filtered, note)
+	}
+	return filtered, nil
+}
+
+func buildTableRows(notes []model.Note) []table.Row {
+	rows := make([]table.Row, 0, len(notes))
+	for _, note := range notes {
 		src := "MEM"
 		if note.StoreType == "Runtime" {
 			src = "RUN"
 		}
 		rows = append(rows, table.Row{src, strings.ToUpper(note.NoteType), note.Namespace, note.Title})
-		filtered = append(filtered, note)
 	}
-	return rows, filtered, nil
+	return rows
+}
+
+func sortNotes(notes []model.Note, sortMode string) {
+	sort.SliceStable(notes, func(i, j int) bool {
+		a := notes[i]
+		b := notes[j]
+		switch sortMode {
+		case "namespace":
+			if a.Namespace != b.Namespace {
+				return a.Namespace < b.Namespace
+			}
+			if a.Kind != b.Kind {
+				return a.Kind < b.Kind
+			}
+			return strings.ToLower(a.Title) < strings.ToLower(b.Title)
+		case "type":
+			if a.NoteType != b.NoteType {
+				return a.NoteType < b.NoteType
+			}
+			if a.StoreType != b.StoreType {
+				return a.StoreType < b.StoreType
+			}
+			return strings.ToLower(a.Title) < strings.ToLower(b.Title)
+		case "title":
+			return strings.ToLower(a.Title) < strings.ToLower(b.Title)
+		default:
+			at := noteSortTime(a)
+			bt := noteSortTime(b)
+			if at.Equal(bt) {
+				return strings.ToLower(a.Title) < strings.ToLower(b.Title)
+			}
+			return at.After(bt)
+		}
+	})
+}
+
+func noteSortTime(note model.Note) time.Time {
+	if note.UpdatedAt != nil {
+		return *note.UpdatedAt
+	}
+	if note.CreatedAt != nil {
+		return *note.CreatedAt
+	}
+	return time.Time{}
+}
+
+func nextSortMode(current string) string {
+	switch current {
+	case "recent":
+		return "namespace"
+	case "namespace":
+		return "type"
+	case "type":
+		return "title"
+	default:
+		return "recent"
+	}
 }
 
 func defaultTableStyles() table.Styles {
@@ -452,6 +620,37 @@ func displayNone(text string) string {
 		return "none"
 	}
 	return text
+}
+
+func (m modelState) accessText() string {
+	if m.installStatus == nil {
+		return "capabilities unavailable"
+	}
+	caps := m.installStatus.Status.Capabilities
+	parts := make([]string, 0, 4)
+	if caps.ClusterScopeRead.Allowed {
+		parts = append(parts, "cluster-read")
+	} else if caps.DurableRead.Allowed {
+		parts = append(parts, "namespace-read")
+	} else {
+		parts = append(parts, "limited-read")
+	}
+	if caps.DurableWrite.Allowed || caps.RuntimeWrite.Allowed {
+		parts = append(parts, "write")
+	} else {
+		parts = append(parts, "read-only")
+	}
+	if caps.AnnotationPatch.Allowed {
+		parts = append(parts, "annotate")
+	} else {
+		parts = append(parts, "no-annotate")
+	}
+	if caps.ActivityCapture.Allowed {
+		parts = append(parts, "activity-ok")
+	} else {
+		parts = append(parts, "activity-limited")
+	}
+	return strings.Join(parts, " ")
 }
 
 func max(a, b int) int {
