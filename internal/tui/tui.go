@@ -33,9 +33,11 @@ type modelState struct {
 	filterMode      string
 	kindFilter      string
 	namespaceFilter string
+	storeFilter     string
 	textFilter      string
 	width           int
 	height          int
+	showHelp        bool
 	err             error
 }
 
@@ -74,7 +76,7 @@ func newModel(ctx context.Context, svc *service.Service, opts Options) (modelSta
 	ti.Placeholder = "filter"
 	ti.Blur()
 	vp := viewport.New(40, 20)
-	rows, notes, err := buildRows(ctx, svc, opts, "", "", "")
+	rows, notes, err := buildRows(ctx, svc, opts, "", "", "", "")
 	if err != nil {
 		return modelState{}, err
 	}
@@ -97,6 +99,7 @@ func newModel(ctx context.Context, svc *service.Service, opts Options) (modelSta
 		table:       tbl,
 		viewport:    vp,
 		filterInput: ti,
+		storeFilter: "all",
 	}
 	m.updateViewport()
 	return m, nil
@@ -114,15 +117,11 @@ func (m modelState) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		headerHeight := bannerHeight(m.width, m.height) + 3
 		footerHeight := 3
 		contentHeight := max(8, msg.Height-headerHeight-footerHeight)
-		listWidth := max(48, msg.Width/2)
-		m.table.SetWidth(listWidth)
-		m.table.SetHeight(contentHeight)
-		m.viewport.Width = max(32, msg.Width-listWidth-4)
-		m.viewport.Height = contentHeight
+		m.updateLayout(contentHeight)
 		m.updateViewport()
 		return m, nil
 	case refreshMsg:
-		rows, notes, err := buildRows(context.Background(), m.service, m.opts, m.textFilter, m.kindFilter, m.namespaceFilter)
+		rows, notes, err := buildRows(context.Background(), m.service, m.opts, m.textFilter, m.kindFilter, m.namespaceFilter, m.storeFilter)
 		if err == nil {
 			m.notes = notes
 			m.table.SetRows(rows)
@@ -165,6 +164,9 @@ func (m modelState) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "q", "ctrl+c":
 			return m, tea.Quit
+		case "?":
+			m.showHelp = !m.showHelp
+			return m, nil
 		case "j", "down":
 			var cmd tea.Cmd
 			m.table, cmd = m.table.Update(msg)
@@ -191,11 +193,36 @@ func (m modelState) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.filterInput.SetValue(m.kindFilter)
 			m.filterInput.Focus()
 			return m, textinput.Blink
-		case "f":
+		case "n":
 			m.filterMode = "namespace"
 			m.filterInput.SetValue(m.namespaceFilter)
 			m.filterInput.Focus()
 			return m, textinput.Blink
+		case "a":
+			m.storeFilter = "all"
+			return m, func() tea.Msg { return refreshMsg{} }
+		case "m":
+			m.storeFilter = "durable"
+			return m, func() tea.Msg { return refreshMsg{} }
+		case "t":
+			m.storeFilter = "runtime"
+			return m, func() tea.Msg { return refreshMsg{} }
+		case "x":
+			m.textFilter = ""
+			m.kindFilter = ""
+			m.namespaceFilter = ""
+			m.storeFilter = "all"
+			return m, func() tea.Msg { return refreshMsg{} }
+		case "g", "home":
+			m.table.SetCursor(0)
+			m.updateViewport()
+			return m, nil
+		case "G", "end":
+			if len(m.notes) > 0 {
+				m.table.SetCursor(len(m.notes) - 1)
+				m.updateViewport()
+			}
+			return m, nil
 		case "r":
 			return m, func() tea.Msg { return refreshMsg{} }
 		}
@@ -208,11 +235,8 @@ func (m modelState) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m modelState) View() string {
-	banner := renderBanner(m.width)
-	scope := lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("153")).Render(" SCOPE " + m.scopeText() + " ")
-	filters := lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("110")).Render(" FILTERS text=" + displayNone(m.textFilter) + " kind=" + displayNone(m.kindFilter) + " ns=" + displayNone(m.namespaceFilter) + " ")
-	header := strings.Join([]string{banner, scope, filters}, "\n")
-	listTitle := lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("45")).Render(fmt.Sprintf(" LIST  %d memo(s) ", len(m.notes)))
+	header := m.renderHeader()
+	listTitle := lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("45")).Render(fmt.Sprintf(" LIST  %d ", len(m.notes)))
 	detailTitle := lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("45")).Render(" DETAIL ")
 	if note := m.selectedNote(); note != nil {
 		detailTitle = lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("45")).Render(" DETAIL  " + render.TargetLabel(*note) + " ")
@@ -220,8 +244,8 @@ func (m modelState) View() string {
 	left := listTitle + "\n" + m.table.View()
 	right := detailTitle + "\n" + m.viewport.View()
 	content := lipgloss.JoinHorizontal(lipgloss.Top, lipgloss.NewStyle().Width(max(48, m.width/2)).Render(left), "  ", lipgloss.NewStyle().Width(max(32, m.width-max(48, m.width/2)-4)).Render(right))
-	status := lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("109")).Render(" STATUS Ready ")
-	keys := lipgloss.NewStyle().Foreground(lipgloss.Color("45")).Render(" [Arrows]/[j][k] move  [PgUp]/[PgDn] or [u][d] scroll  [/] text  [f] ns  [c] kind  [r] refresh  [q] quit ")
+	status := lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("109")).Render(" STATUS " + m.statusText() + " ")
+	keys := m.renderFooterKeys()
 	filterPrompt := ""
 	if m.filterMode != "" {
 		filterPrompt = "\n" + lipgloss.NewStyle().Foreground(lipgloss.Color("214")).Render("Filter "+m.filterMode+": ") + m.filterInput.View()
@@ -230,7 +254,101 @@ func (m modelState) View() string {
 	if m.err != nil {
 		errText = "\n" + lipgloss.NewStyle().Foreground(lipgloss.Color("203")).Render(m.err.Error())
 	}
-	return strings.Join([]string{header, "", content, "", status, keys + filterPrompt + errText}, "\n")
+	helpBlock := ""
+	if m.showHelp {
+		helpBlock = "\n\n" + m.renderHelp()
+	}
+	return strings.Join([]string{header, "", content, "", status, keys + filterPrompt + errText + helpBlock}, "\n")
+}
+
+func (m modelState) renderHeader() string {
+	banner := renderBanner(m.width)
+	scope := lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("153")).Render(" SCOPE " + m.scopeText() + " ")
+	filters := lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("110")).Render(" FILTER " + displayNone(m.textFilter) + " ")
+	kind := lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("146")).Render(" KIND " + displayNone(m.kindFilter) + " ")
+	store := "all"
+	if m.storeFilter != "" {
+		store = m.storeFilter
+	} else if !m.opts.IncludeRuntime {
+		store = "durable"
+	}
+	view := lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("214")).Render(" VIEW " + store + " ")
+	runtime := lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("45")).Render(" RUNTIME " + displayNone(m.opts.RuntimeNamespace) + " ")
+	counts := lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("109")).Render(fmt.Sprintf(" COUNT %d ", len(m.notes)))
+	metaBlock := strings.Join([]string{scope, filters, kind, view, runtime, counts}, "\n")
+
+	if m.width >= 118 && bannerVariant(m.width, m.height) != "text" {
+		leftWidth := max(50, m.width-42)
+		rightWidth := max(34, m.width-leftWidth-2)
+		return lipgloss.JoinHorizontal(
+			lipgloss.Top,
+			lipgloss.NewStyle().Width(leftWidth).Render(banner),
+			"  ",
+			lipgloss.NewStyle().Width(rightWidth).Align(lipgloss.Right).Render(metaBlock),
+		)
+	}
+
+	return strings.Join([]string{banner, scope, lipgloss.JoinHorizontal(lipgloss.Top, filters, " ", kind, " ", view), runtime}, "\n")
+}
+
+func (m modelState) renderFooterKeys() string {
+	key := lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("45")).Bold(true)
+	desc := lipgloss.NewStyle().Foreground(lipgloss.Color("252"))
+	items := []string{
+		key.Render(" ↑ ↓ / j k ") + desc.Render(" move"),
+		key.Render(" g / G ") + desc.Render(" top/end"),
+		key.Render(" PgUp PgDn / u d ") + desc.Render(" scroll"),
+		key.Render(" / ") + desc.Render(" text"),
+		key.Render(" n ") + desc.Render(" ns"),
+		key.Render(" c ") + desc.Render(" kind"),
+		key.Render(" a / m / t ") + desc.Render(" all/durable/runtime"),
+		key.Render(" x ") + desc.Render(" clear"),
+		key.Render(" r ") + desc.Render(" refresh"),
+		key.Render(" ? ") + desc.Render(" help"),
+		key.Render(" q ") + desc.Render(" quit"),
+	}
+	return strings.Join(items, "  ")
+}
+
+func (m modelState) renderHelp() string {
+	lines := []string{
+		"[/] text filter  [n] namespace filter  [c] kind filter",
+		"[a] all memos  [m] durable only  [t] runtime only  [x] clear filters",
+		"[j][k] or arrows move  [g]/[G] jump top/end  [u][d] or [PgUp]/[PgDn] scroll detail",
+		"[r] refresh  [q] quit",
+	}
+	return lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("45")).
+		Padding(0, 1).
+		Foreground(lipgloss.Color("252")).
+		Render(strings.Join(lines, "\n"))
+}
+
+func (m modelState) statusText() string {
+	if m.err != nil {
+		return "Error"
+	}
+	total := len(m.notes)
+	if total == 0 {
+		return "Empty"
+	}
+	return fmt.Sprintf("%d/%d", m.table.Cursor()+1, total)
+}
+
+func (m *modelState) updateLayout(contentHeight int) {
+	listWidth := max(48, m.width/2)
+	m.table.SetWidth(listWidth)
+	m.table.SetHeight(contentHeight)
+	titleWidth := max(18, listWidth-34)
+	m.table.SetColumns([]table.Column{
+		{Title: "SRC", Width: 5},
+		{Title: "TYPE", Width: 12},
+		{Title: "NS", Width: 12},
+		{Title: "TITLE", Width: titleWidth},
+	})
+	m.viewport.Width = max(32, m.width-listWidth-4)
+	m.viewport.Height = contentHeight
 }
 
 func (m *modelState) updateViewport() {
@@ -274,21 +392,29 @@ func (m modelState) scopeText() string {
 	return "all accessible namespaces"
 }
 
-func buildRows(ctx context.Context, svc *service.Service, opts Options, textFilter, kindFilter, namespaceFilter string) ([]table.Row, []model.Note, error) {
+func buildRows(ctx context.Context, svc *service.Service, opts Options, textFilter, kindFilter, namespaceFilter, storeFilter string) ([]table.Row, []model.Note, error) {
 	namespace := strings.TrimSpace(namespaceFilter)
 	notes, err := svc.FindNotes(ctx, textFilter, "", kindFilter, namespace, "", opts.IncludeRuntime, false, opts.RuntimeNamespace)
 	if err != nil {
 		return nil, nil, err
 	}
 	rows := make([]table.Row, 0, len(notes))
+	filtered := make([]model.Note, 0, len(notes))
 	for _, note := range notes {
+		if storeFilter == "durable" && note.StoreType != "Durable" {
+			continue
+		}
+		if storeFilter == "runtime" && note.StoreType != "Runtime" {
+			continue
+		}
 		src := "MEM"
 		if note.StoreType == "Runtime" {
 			src = "RUN"
 		}
 		rows = append(rows, table.Row{src, strings.ToUpper(note.NoteType), note.Namespace, note.Title})
+		filtered = append(filtered, note)
 	}
-	return rows, notes, nil
+	return rows, filtered, nil
 }
 
 func defaultTableStyles() table.Styles {
