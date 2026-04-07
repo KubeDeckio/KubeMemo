@@ -893,7 +893,7 @@ body {
   background:
     radial-gradient(circle at top right, rgba(2, 186, 255, 0.18), transparent 30%),
     linear-gradient(135deg, rgba(9, 27, 52, 0.96), rgba(13, 36, 68, 0.94)),
-    url("../images/header.svg") center/cover no-repeat;
+    url("../images/header.png") center/cover no-repeat;
   color: #f4f9ff;
 }
 
@@ -1249,7 +1249,7 @@ body {
   background:
     radial-gradient(circle at top right, rgba(2, 186, 255, 0.15), transparent 30%),
     linear-gradient(135deg, rgba(11, 86, 170, 0.95), rgba(8, 63, 132, 0.92)),
-    url("../images/header.svg") center/cover no-repeat;
+    url("../images/header.png") center/cover no-repeat;
 }
 
 [data-md-color-scheme="default"] .km-home-card,
