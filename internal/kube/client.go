@@ -31,14 +31,15 @@ import (
 )
 
 type Client struct {
-	restConfig     *rest.Config
-	clientset      kubernetes.Interface
-	dynamic        dynamic.Interface
-	discovery      discovery.DiscoveryInterface
-	mapper         *restmapper.DeferredDiscoveryRESTMapper
-	rawConfig      api.Config
-	currentNS      string
-	currentContext string
+	restConfig      *rest.Config
+	clientset       kubernetes.Interface
+	dynamic         dynamic.Interface
+	discovery       discovery.DiscoveryInterface
+	cachedDiscovery discovery.CachedDiscoveryInterface
+	mapper          *restmapper.DeferredDiscoveryRESTMapper
+	rawConfig       api.Config
+	currentNS       string
+	currentContext  string
 }
 
 func New() (*Client, error) {
@@ -85,14 +86,15 @@ func New() (*Client, error) {
 	mapper := restmapper.NewDeferredDiscoveryRESTMapper(cached)
 
 	return &Client{
-		restConfig:     restConfig,
-		clientset:      clientset,
-		dynamic:        dyn,
-		discovery:      disco,
-		mapper:         mapper,
-		rawConfig:      rawConfig,
-		currentNS:      namespace,
-		currentContext: rawConfig.CurrentContext,
+		restConfig:      restConfig,
+		clientset:       clientset,
+		dynamic:         dyn,
+		discovery:       disco,
+		cachedDiscovery: cached,
+		mapper:          mapper,
+		rawConfig:       rawConfig,
+		currentNS:       namespace,
+		currentContext:  rawConfig.CurrentContext,
 	}, nil
 }
 
@@ -122,14 +124,15 @@ func NewForConfig(restConfig *rest.Config, namespace, currentContext string, raw
 	mapper := restmapper.NewDeferredDiscoveryRESTMapper(cached)
 
 	return &Client{
-		restConfig:     restConfig,
-		clientset:      clientset,
-		dynamic:        dyn,
-		discovery:      disco,
-		mapper:         mapper,
-		rawConfig:      rawConfig,
-		currentNS:      namespace,
-		currentContext: rawConfig.CurrentContext,
+		restConfig:      restConfig,
+		clientset:       clientset,
+		dynamic:         dyn,
+		discovery:       disco,
+		cachedDiscovery: cached,
+		mapper:          mapper,
+		rawConfig:       rawConfig,
+		currentNS:       namespace,
+		currentContext:  rawConfig.CurrentContext,
 	}, nil
 }
 
@@ -203,6 +206,10 @@ func (c *Client) ResolveResource(apiVersion, kind string) (*meta.RESTMapping, sc
 		return nil, schema.GroupVersionResource{}, err
 	}
 	mapping, err := c.mapper.RESTMapping(schema.GroupKind{Group: gv.Group, Kind: kind}, gv.Version)
+	if err != nil {
+		c.refreshMapper()
+		mapping, err = c.mapper.RESTMapping(schema.GroupKind{Group: gv.Group, Kind: kind}, gv.Version)
+	}
 	if err != nil {
 		return nil, schema.GroupVersionResource{}, err
 	}
@@ -284,12 +291,17 @@ func (c *Client) ApplyYAML(ctx context.Context, manifest string, namespaceOverri
 		if err := c.ApplyUnstructured(ctx, &obj); err != nil {
 			return err
 		}
+		c.refreshMapper()
 	}
 	return nil
 }
 
 func (c *Client) ApplyUnstructured(ctx context.Context, obj *unstructured.Unstructured) error {
 	mapping, err := c.mapper.RESTMapping(obj.GroupVersionKind().GroupKind(), obj.GroupVersionKind().Version)
+	if err != nil {
+		c.refreshMapper()
+		mapping, err = c.mapper.RESTMapping(obj.GroupVersionKind().GroupKind(), obj.GroupVersionKind().Version)
+	}
 	if err != nil {
 		return err
 	}
@@ -330,6 +342,15 @@ func (c *Client) ApplyUnstructured(ctx context.Context, obj *unstructured.Unstru
 	obj.SetResourceVersion(existing.GetResourceVersion())
 	_, err = resourceClient.Update(ctx, obj, metav1.UpdateOptions{})
 	return err
+}
+
+func (c *Client) refreshMapper() {
+	if c.cachedDiscovery != nil {
+		c.cachedDiscovery.Invalidate()
+	}
+	if c.mapper != nil {
+		c.mapper.Reset()
+	}
 }
 
 func (c *Client) Delete(ctx context.Context, gvr schema.GroupVersionResource, namespace, name string) error {
