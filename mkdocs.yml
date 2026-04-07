@@ -1,0 +1,92 @@
+site_name: "KubeMemo by KubeDeck"
+site_url: https://kubememo.kubedeck.io
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: material
+  custom_dir: overrides
+  font:
+    text: Roboto
+    code: Roboto Mono
+  logo: images/logo.svg
+  favicon: images/favicon.svg
+  icon:
+    repo: fontawesome/brands/github
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+  features:
+    - navigation.tabs
+    - navigation.top
+    - navigation.sections
+    - navigation.path
+    - navigation.footer
+    - navigation.instant
+    - navigation.tracking
+    - content.code.annotate
+    - content.code.copy
+    - content.tabs.link
+    - content.action.edit
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/KubeDeckio/KubeMemo
+  generator: false
+
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/extra.js
+
+copyright: Copyright &copy; 2026 KubeDeck
+
+repo_url: https://github.com/KubeDeckio/KubeMemo
+edit_uri: edit/main/docs/
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Installation: installation.md
+  - CLI:
+      - Overview: cli/index.md
+      - TUI: cli/tui.md
+      - PowerShell Wrapper: cli/powershell.md
+  - Concepts:
+      - Durable vs Runtime Memos: concepts/stores.md
+      - GitOps Behavior: concepts/gitops.md
+      - Annotations: concepts/annotations.md
+  - Reference:
+      - Commands: reference/commands.md
+      - CRDs: reference/crds.md
+  - Changelog: changelog.md
+  - KubeDeck: https://kubedeck.io
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - toc:
+      permalink: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+  - pymdownx.critic
+  - pymdownx.mark
+
+plugins:
+  - search

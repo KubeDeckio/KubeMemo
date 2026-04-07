@@ -13,11 +13,45 @@
 
 ---
 
-**KubeMemo** is a PowerShell-first Kubernetes operational memory tool from **Kubedeck**. It lets you attach durable notes, temporary runtime notes, and activity breadcrumbs to Kubernetes resources, namespaces, and logical applications so operational context stays with the workload.
+**KubeMemo** is a Kubernetes operational memory tool from **Kubedeck**. The core implementation is now a native **Go CLI and TUI**, with a thin **PowerShell wrapper module** so the tool can still be distributed through PowerShell Gallery.
 
 ## Documentation
 
 KubeMemo is designed as a standalone Kubedeck tool with future integration points for KubeBuddy.
+
+- Docs site: https://kubememo.kubedeck.io
+- Source: `/docs`, `/overrides`, and `mkdocs.yml`
+
+Build the docs locally:
+
+```bash
+python3 -m pip install -r requirements-docs.txt
+mkdocs serve
+```
+
+## Release Automation
+
+GitHub Actions now handle:
+
+- tag-driven Go binary release assets
+- tag-driven PowerShell Gallery publishing
+- MkDocs deployment to GitHub Pages
+
+Required repository secrets:
+
+- `PSGALLERY_API_KEY` for PowerShell Gallery publishing
+
+Tagging a release like `v0.1.1` triggers:
+
+- cross-platform Go binary builds
+- a GitHub release with release assets
+- a PowerShell module package containing the wrapper and bundled binaries
+
+## Architecture
+
+- **Go core:** the real product surface lives in the `kubememo` Go binary.
+- **PowerShell wrapper:** the PowerShell module shells out to the Go binary, parses JSON for object-returning commands, and keeps `WhatIf` / `Confirm` behavior for PowerShell users.
+- **Cross-platform distribution:** the Go binary is the path for GitHub Releases, Homebrew, and future Krew packaging.
 
 ## Features
 
@@ -26,7 +60,7 @@ KubeMemo is designed as a standalone Kubedeck tool with future integration point
 - **GitOps-Aware Behavior:** Block direct durable writes in GitOps mode and generate file-based output for Git-managed workflows.
 - **Cluster Bootstrap:** Install and validate CRDs, runtime namespace, and optional RBAC directly from the PowerShell module.
 - **Memo-Style Rendering:** Show durable and runtime context as memo-style terminal cards with color, wrapped content, and clearer note sections.
-- **Built-In TUI:** Browse and view notes from an interactive memo board with `Open-KubeMemoTui`.
+- **Built-In TUI:** Browse and view notes from an interactive memo board with `kubememo tui` or `Open-KubeMemoTui`.
 - **RBAC-Aware Reads:** Fall back to namespace-scoped reads when cluster-wide listing is not allowed, and filter the TUI by namespace scope.
 - **Actor Stamping:** Record `CreatedBy` and `UpdatedBy` for memos, preferring the RBAC identity from `kubectl auth whoami` when available.
 - **Unified Object Model:** Normalize durable and runtime notes into one PowerShell shape for search, filtering, and rendering.
@@ -72,7 +106,35 @@ Install KubeMemo in GitOps-aware mode:
 Install-KubeMemo -GitOpsAware -EnableRuntimeStore
 ```
 
+Update installed prerequisites with GitOps-aware checks:
+
+```powershell
+Update-KubeMemo -GitOpsAware
+```
+
+### Go CLI Build
+
+Build the native CLI locally:
+
+```bash
+make build
+```
+
+Run the native CLI directly:
+
+```bash
+./KubeMemo/bin/$(go env GOOS)-$(go env GOARCH)/kubememo get --output json
+```
+
 ## Usage
+
+Native CLI:
+
+```bash
+kubememo get --namespace prod --output json
+kubememo show --kind Deployment --namespace prod --name orders-api
+kubememo tui
+```
 
 Create a durable note:
 
@@ -95,25 +157,33 @@ New-KubeMemo -Temporary -Title "Investigating replica spike" -Summary "Manual sc
 Show notes for a resource:
 
 ```powershell
-Show-KubeMemo -Kind Deployment -Namespace prod -Name orders-api -IncludeRuntime
+Show-KubeMemo -Kind Deployment -Namespace prod -Name orders-api
 ```
 
 Show notes with plain output and no ANSI colors:
 
 ```powershell
-Show-KubeMemo -Kind Deployment -Namespace prod -Name orders-api -IncludeRuntime -NoColor
+Show-KubeMemo -Kind Deployment -Namespace prod -Name orders-api -NoColor
 ```
 
 Open the interactive memo board:
 
 ```powershell
-Open-KubeMemoTui -IncludeRuntime
+Open-KubeMemoTui
 ```
 
 Open the memo board scoped to one namespace:
 
 ```powershell
-Open-KubeMemoTui -IncludeRuntime -Namespace prod
+Open-KubeMemoTui -Namespace prod
+```
+
+Force durable-only output for human-facing commands:
+
+```powershell
+Show-KubeMemo -Kind Deployment -Namespace prod -Name orders-api -DurableOnly
+Find-KubeMemo -Text rollout -DurableOnly
+Open-KubeMemoTui -DurableOnly
 ```
 
 TUI shortcuts:
@@ -144,6 +214,12 @@ Export durable notes for GitOps workflows:
 Export-KubeMemo -Path ./ops/kubememo
 ```
 
+Write a durable memo manifest to disk instead of applying it directly:
+
+```powershell
+New-KubeMemo -Title "Orders API deploy note" -Summary "Git-managed memo" -Content "Create this as a manifest for GitOps." -Kind Deployment -Namespace prod -Name orders-api -OutputPath ./ops/kubememo/resources/prod/deployment-orders-api.yaml
+```
+
 ## Command Reference
 
 Public commands exported by the module:
@@ -158,10 +234,10 @@ Public commands exported by the module:
 
 ### Read, search, and render
 
-- `Get-KubeMemo` returns normalized durable notes, or durable plus runtime notes with `-IncludeRuntime`.
-- `Find-KubeMemo` filters notes by text, type, kind, namespace, name, and expiry handling.
-- `Show-KubeMemo` renders memo-style cards for a target in the terminal.
-- `Open-KubeMemoTui` opens the interactive memo board for browsing and reading notes.
+- `Get-KubeMemo` returns normalized durable notes by default, or durable plus runtime notes with `-IncludeRuntime`.
+- `Find-KubeMemo` searches durable and runtime notes by default, with `-DurableOnly` available from the PowerShell wrapper.
+- `Show-KubeMemo` renders memo-style cards for a target in the terminal and includes runtime notes by default.
+- `Open-KubeMemoTui` opens the interactive memo board for browsing and reading notes, including runtime notes by default.
 
 ### Write and remove
 
@@ -169,6 +245,8 @@ Public commands exported by the module:
 - `Set-KubeMemo` edits an existing memo.
 - `Remove-KubeMemo` removes a memo or deletes expired runtime memos.
 - `Clear-KubeMemo` clears runtime memos, with `-ExpiredOnly` support.
+- `New-KubeMemo` and `Set-KubeMemo` support `-OutputPath` for Git-managed durable manifests.
+- `-AnnotateResource` remains unsupported in the Go core today and will fail clearly if used from the PowerShell wrapper.
 
 ### GitOps and portability
 
@@ -184,6 +262,22 @@ Public commands exported by the module:
 - `Get-KubeMemoConfig` returns the effective internal configuration.
 
 Private helper functions under [KubeMemo/Private](/Users/pixelrobots/Documents/Git/KubeMemo/KubeMemo/Private) are internal implementation details and are not part of the supported public interface.
+
+## Development
+
+Format the Go code:
+
+```bash
+make fmt
+```
+
+Run the Go test suite:
+
+```bash
+make test
+```
+
+Release builds are configured in [.goreleaser.yaml](/Users/pixelrobots/Documents/Git/KubeMemo/.goreleaser.yaml).
 
 ## Changelog
 

@@ -1,10 +1,8 @@
-$publicPath = Join-Path -Path $PSScriptRoot -ChildPath 'Public'
 $privatePath = Join-Path -Path $PSScriptRoot -ChildPath 'Private'
+$wrapperPath = Join-Path -Path $PSScriptRoot -ChildPath 'Wrapper/PublicWrapper.ps1'
 
-foreach ($script in Get-ChildItem -Path $privatePath -Filter '*.ps1' -File | Sort-Object Name) {
-    . $script.FullName
+foreach ($scriptName in 'Get-KubeMemoConfigInternal.ps1', 'Get-KubeMemoBinaryPath.ps1', 'Invoke-KubeMemoBinary.ps1') {
+    . (Join-Path -Path $privatePath -ChildPath $scriptName)
 }
 
-foreach ($script in Get-ChildItem -Path $publicPath -Filter '*.ps1' -File | Sort-Object Name) {
-    . $script.FullName
-}
+. $wrapperPath

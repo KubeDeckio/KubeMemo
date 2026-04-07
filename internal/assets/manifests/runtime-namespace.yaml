@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kubememo-runtime
+  labels:
+    app.kubernetes.io/name: kubememo-runtime
+    app.kubernetes.io/part-of: kubememo

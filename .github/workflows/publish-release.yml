@@ -1,0 +1,96 @@
+name: Publish KubeMemo Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.ref_name }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Set module version from tag
+        shell: pwsh
+        run: |
+          $version = $Env:TAG -replace '^v', ''
+          (Get-Content ./KubeMemo/KubeMemo.psd1) `
+            -replace "^\s*ModuleVersion\s*=\s*'.*'", "    ModuleVersion     = '$version'" |
+            Set-Content ./KubeMemo/KubeMemo.psd1
+
+      - name: Build release archives and module bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version="${TAG#v}"
+          release_dir="dist/release"
+          module_stage="dist/module/KubeMemo"
+
+          rm -rf dist
+          mkdir -p "$release_dir" "$module_stage/bin"
+          cp -R KubeMemo/* "$module_stage/"
+          rm -rf "$module_stage/bin"
+          mkdir -p "$module_stage/bin"
+
+          targets=(
+            "darwin amd64"
+            "darwin arm64"
+            "linux amd64"
+            "linux arm64"
+            "windows amd64"
+            "windows arm64"
+          )
+
+          for target in "${targets[@]}"; do
+            read -r goos goarch <<<"$target"
+            bin_dir="dist/bin/${goos}-${goarch}"
+            mkdir -p "$bin_dir" "$module_stage/bin/${goos}-${goarch}"
+
+            ext=""
+            if [[ "$goos" == "windows" ]]; then
+              ext=".exe"
+            fi
+
+            GOOS="$goos" GOARCH="$goarch" CGO_ENABLED=0 \
+              go build -trimpath -ldflags="-s -w" -o "$bin_dir/kubememo$ext" ./cmd/kubememo
+
+            cp "$bin_dir/kubememo$ext" "$module_stage/bin/${goos}-${goarch}/"
+
+            asset="kubememo_${version}_${goos}_${goarch}"
+            if [[ "$goos" == "windows" ]]; then
+              (
+                cd "$bin_dir"
+                zip -q "../../release/${asset}.zip" "kubememo$ext"
+              )
+            else
+              tar -C "$bin_dir" -czf "$release_dir/${asset}.tar.gz" "kubememo$ext"
+            fi
+          done
+
+          tar -C dist/module -czf "$release_dir/KubeMemo-psmodule_${version}.tar.gz" KubeMemo
+          (
+            cd "$release_dir"
+            sha256sum ./* > checksums.txt
+          )
+
+      - name: Create GitHub release and upload assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/release/*
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

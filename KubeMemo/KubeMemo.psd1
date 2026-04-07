@@ -36,7 +36,7 @@
         PSData = @{
             Tags       = @('Kubernetes', 'PowerShell', 'Kubedeck', 'KubeMemo')
             LicenseUri = 'https://github.com/KubeDeckio/KubeMemo/blob/main/LICENSE'
-            ProjectUri = 'https://github.com/kubedeck/KubeMemo'
+            ProjectUri = 'https://github.com/KubeDeckio/KubeMemo'
             ReleaseNotes = 'https://github.com/KubeDeckio/KubeMemo/blob/main/README.md'
         }
     }
