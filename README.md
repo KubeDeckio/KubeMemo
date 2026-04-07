@@ -144,6 +144,47 @@ Export durable notes for GitOps workflows:
 Export-KubeMemo -Path ./ops/kubememo
 ```
 
+## Command Reference
+
+Public commands exported by the module:
+
+### Bootstrap and lifecycle
+
+- `Install-KubeMemo` installs CRDs, runtime namespace, and optional RBAC.
+- `Uninstall-KubeMemo` removes KubeMemo prerequisites, with runtime-only and data-preservation options.
+- `Update-KubeMemo` reapplies bundled manifests and updates installed prerequisites.
+- `Test-KubeMemoInstallation` checks cluster reachability, CRDs, namespace, RBAC, and GitOps/runtime state.
+- `Get-KubeMemoInstallationStatus` returns the detected installation mode and status summary.
+
+### Read, search, and render
+
+- `Get-KubeMemo` returns normalized durable notes, or durable plus runtime notes with `-IncludeRuntime`.
+- `Find-KubeMemo` filters notes by text, type, kind, namespace, name, and expiry handling.
+- `Show-KubeMemo` renders memo-style cards for a target in the terminal.
+- `Open-KubeMemoTui` opens the interactive memo board for browsing and reading notes.
+
+### Write and remove
+
+- `New-KubeMemo` creates a durable memo by default, or a runtime memo with `-Temporary`.
+- `Set-KubeMemo` edits an existing memo.
+- `Remove-KubeMemo` removes a memo or deletes expired runtime memos.
+- `Clear-KubeMemo` clears runtime memos, with `-ExpiredOnly` support.
+
+### GitOps and portability
+
+- `Export-KubeMemo` writes memo manifests to files for Git-managed workflows.
+- `Import-KubeMemo` applies memo manifests from disk.
+- `Sync-KubeMemoGitOps` runs GitOps-oriented import or export flows.
+- `Test-KubeMemoGitOpsMode` reports the detected GitOps state.
+- `Test-KubeMemoRuntimeStore` validates runtime-store availability and safety.
+
+### Diagnostics and activity
+
+- `Get-KubeMemoActivity` returns runtime activity memos.
+- `Get-KubeMemoConfig` returns the effective internal configuration.
+
+Private helper functions under [KubeMemo/Private](/Users/pixelrobots/Documents/Git/KubeMemo/KubeMemo/Private) are internal implementation details and are not part of the supported public interface.
+
 ## Changelog
 
 All notable changes to this project should be documented in the [CHANGELOG](./CHANGELOG.md).
