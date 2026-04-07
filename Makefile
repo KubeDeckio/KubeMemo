@@ -17,7 +17,9 @@ run:
 	go run -ldflags "-X github.com/KubeDeckio/KubeMemo/internal/cli.version=$(VERSION)" ./cmd/kubememo
 
 docs-build:
+	cat CHANGELOG.md > docs/changelog.md
 	mkdocs build
 
 docs-serve:
+	cat CHANGELOG.md > docs/changelog.md
 	mkdocs serve

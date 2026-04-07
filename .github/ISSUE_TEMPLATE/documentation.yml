@@ -1,0 +1,25 @@
+name: Documentation
+description: Found a typo or something that needs clarification?
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to help improve the KubeMemo docs.
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: |
+        What is unclear, missing, or incorrect in the docs?
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggestion
+      description: |
+        What should we do instead?
+    validations:
+      required: true

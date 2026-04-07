@@ -1,0 +1,60 @@
+name: Bug Report
+description: Something in KubeMemo is not working as expected.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening a new issue please:
+
+        - Verify you are using the latest KubeMemo release.
+        - Check the docs at https://kubememo.kubedeck.io/
+        - Search existing issues to avoid duplicates.
+        - Include logs, screenshots, or command output when possible.
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: What happened?
+      description: |
+        Please include the KubeMemo version, install method, operating system,
+        Kubernetes version, and anything else needed to understand the failure.
+      value: |-
+        - KubeMemo version:
+        - Install method (Homebrew, GitHub release, PowerShell Gallery, source build):
+        - Kubernetes version:
+        - kubectl version:
+        - Operating system:
+        - Shell or terminal:
+        - Cluster type (kind, AKS, EKS, GKE, Docker Desktop, other):
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: |
+        Describe the expected behavior and the actual result you got.
+      placeholder: >
+        What did you expect KubeMemo to do instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to reproduce the behavior
+      description: |
+        Describe the exact commands or workflow that caused the problem.
+        Include TUI steps, install flags, GitOps mode, or runtime-store setup when relevant.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs, screenshots, or example output
+      description: |
+        Paste logs, screenshots, or command output that help show the problem.
+    validations:
+      required: false

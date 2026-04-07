@@ -87,12 +87,27 @@ jobs:
             sha256sum ./* > checksums.txt
           )
 
+      - name: Extract release notes from changelog
+        shell: pwsh
+        run: |
+          $version = $Env:TAG -replace '^v', ''
+          $changelogPath = "CHANGELOG.md"
+          $content = Get-Content -Path $changelogPath -Raw
+
+          if ($content -match "(?ms)^##\s+$version\s*$.*?(?=^##\s+|\z)") {
+            $matches[0].Trim() | Out-File -FilePath "dist/release/release_notes.md" -Encoding utf8
+          }
+          else {
+            Write-Host "No changelog section found for version $version."
+            exit 1
+          }
+
       - name: Create GitHub release and upload assets
         uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/release/*
-          generate_release_notes: true
+          body_path: dist/release/release_notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
