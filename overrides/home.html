@@ -22,15 +22,15 @@
       </div>
 
       <div class="km-home-metrics">
-        <article class="km-home-metric">
+        <article class="km-home-metric km-home-metric--blue">
           <span class="km-home-metric__value">2 stores</span>
           <span class="km-home-metric__label">Durable memos and runtime memos stay separate on purpose.</span>
         </article>
-        <article class="km-home-metric">
+        <article class="km-home-metric km-home-metric--green">
           <span class="km-home-metric__value">Terminal first</span>
           <span class="km-home-metric__label">CLI cards, TUI browsing, and `kubectl describe` discovery hints.</span>
         </article>
-        <article class="km-home-metric">
+        <article class="km-home-metric km-home-metric--amber">
           <span class="km-home-metric__value">GitOps aware</span>
           <span class="km-home-metric__label">Keep curated notes in Git and temporary context in a live runtime store.</span>
         </article>
@@ -50,17 +50,17 @@
       </div>
 
       <div class="km-home-card-grid km-home-card-grid--3">
-        <article class="km-home-card">
+        <article class="km-home-card km-home-card--blue">
           <span class="km-home-card__eyebrow">Durable knowledge</span>
           <h3>Keep runbooks and warnings with the target they belong to</h3>
           <p>Store long-lived memos for ownership, maintenance guidance, known issues, and rollout behavior.</p>
         </article>
-        <article class="km-home-card">
+        <article class="km-home-card km-home-card--green">
           <span class="km-home-card__eyebrow">Runtime context</span>
           <h3>Make temporary notes and incident handovers safe to write live</h3>
           <p>Use runtime memos for fast-changing context without polluting the durable record or fighting GitOps reconciliation.</p>
         </article>
-        <article class="km-home-card">
+        <article class="km-home-card km-home-card--amber">
           <span class="km-home-card__eyebrow">Activity capture</span>
           <h3>Turn cluster changes into readable breadcrumbs</h3>
           <p>Capture meaningful workload and traffic changes as runtime memos so the next operator can see what changed and why.</p>
@@ -77,7 +77,7 @@
       </div>
 
       <div class="km-home-card-grid km-home-card-grid--2">
-        <article class="km-home-panel">
+        <article class="km-home-panel km-home-panel--blue">
           <span class="km-home-card__eyebrow">Durable store</span>
           <h3>Long-lived operational memory</h3>
           <p>Use durable memos for curated notes that should survive team changes and deployment cycles.</p>
@@ -88,7 +88,7 @@
             <li>GitOps-friendly export and import workflows</li>
           </ul>
         </article>
-        <article class="km-home-panel">
+        <article class="km-home-panel km-home-panel--amber">
           <span class="km-home-card__eyebrow">Runtime store</span>
           <h3>Live operational context</h3>
           <p>Use runtime memos for incident notes, temporary advisories, and activity breadcrumbs created while the cluster is moving.</p>
@@ -178,17 +178,17 @@
       </div>
 
       <div class="km-home-workflow">
-        <article class="km-home-workflow-step">
+        <article class="km-home-workflow-step km-home-workflow-step--blue">
           <span class="km-home-workflow-step__num">1</span>
           <h3>Attach durable knowledge</h3>
           <p>Add warnings, ownership, and runbooks to a resource, namespace, or app before the next operator needs them.</p>
         </article>
-        <article class="km-home-workflow-step">
+        <article class="km-home-workflow-step km-home-workflow-step--green">
           <span class="km-home-workflow-step__num">2</span>
           <h3>Capture live context</h3>
           <p>Write runtime notes during incidents and let activity capture create breadcrumbs as workloads and traffic objects change.</p>
         </article>
-        <article class="km-home-workflow-step">
+        <article class="km-home-workflow-step km-home-workflow-step--amber">
           <span class="km-home-workflow-step__num">3</span>
           <h3>Read it where you work</h3>
           <p>Use CLI cards, the TUI board, and `kubectl describe` discovery hints to recover the story without hunting across tabs.</p>
@@ -204,42 +204,48 @@
         <h2>CLI, TUI, PowerShell, Homebrew, GitHub releases, and Helm.</h2>
       </div>
 
-      <div class="km-home-card-grid km-home-card-grid--3">
-        <article class="km-home-card">
-          <span class="km-home-card__eyebrow">Go CLI</span>
-          <h3>Use the native KubeMemo CLI on macOS, Linux, and Windows</h3>
-          <p>Run `kubememo get`, `show`, `find`, `tui`, and `watch-activity` directly from the terminal.</p>
-        </article>
-        <article class="km-home-card">
-          <span class="km-home-card__eyebrow">PowerShell wrapper</span>
-          <h3>Keep PowerShell Gallery distribution for PowerShell-first teams</h3>
-          <p>Use the same product surface through wrapper commands without maintaining a second implementation.</p>
-        </article>
-        <article class="km-home-card">
-          <span class="km-home-card__eyebrow">Cluster component</span>
-          <h3>Enable always-on activity capture when you need it</h3>
-          <p>Deploy the optional in-cluster activity watcher with Helm or installation flags for continuous breadcrumbs.</p>
-        </article>
-      </div>
+      <div class="km-home-showcase">
+        <article class="km-home-terminal-window">
+          <div class="km-home-terminal-window__bar">
+            <span></span><span></span><span></span>
+          </div>
+          <div class="km-home-terminal-window__meta">kubememo show --kind Deployment --namespace prod --name orders-api</div>
+          <pre><code>KubeMemo  Deployment/prod/orders-api
 
-      <div class="km-home-command-grid">
-        <article class="km-home-command-card">
-          <span class="km-home-card__eyebrow">Install</span>
-          <pre><code>brew install kubedeckio/tap/kubememo</code></pre>
+Durable Memos
+
+📌  WARNING  Orders API warm-up behavior
+Deployment/prod/orders-api
+Owner: platform-apps
+
+summary
+  Expected transient 502s after deployment
+
+guidance
+  Ignore failures for up to 3 minutes after rollout.
+
+Runtime Memos
+
+📍  ACTIVITY  Manual scale change detected
+Deployment/prod/orders-api • expires 12h
+Source: activity-capture
+
+summary
+  Replicas changed from 2 to 5 during investigation</code></pre>
         </article>
-        <article class="km-home-command-card">
-          <span class="km-home-card__eyebrow">PowerShell</span>
-          <pre><code>Install-Module KubeMemo
-Install-KubeMemo -EnableRuntimeStore</code></pre>
-        </article>
-        <article class="km-home-command-card">
-          <span class="km-home-card__eyebrow">Browse</span>
-          <pre><code>kubememo tui</code></pre>
-        </article>
-        <article class="km-home-command-card">
-          <span class="km-home-card__eyebrow">Activity capture</span>
-          <pre><code>kubememo watch-activity --namespace prod --kind Deployment</code></pre>
-        </article>
+
+        <div class="km-home-showcase-stack">
+          <article class="km-home-card km-home-card--blue">
+            <span class="km-home-card__eyebrow">Native CLI</span>
+            <h3>Read memos in the terminal where the incident is already happening</h3>
+            <p>Use the Go CLI for card rendering, search, activity watching, and the TUI without leaving the shell.</p>
+          </article>
+          <article class="km-home-card km-home-card--green">
+            <span class="km-home-card__eyebrow">Platform fit</span>
+            <h3>Install the way your team already works</h3>
+            <p>Use Homebrew, GitHub releases, the PowerShell wrapper, or the optional Helm deployment for always-on cluster activity capture.</p>
+          </article>
+        </div>
       </div>
     </div>
   </section>

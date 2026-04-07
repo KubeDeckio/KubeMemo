@@ -1005,6 +1005,39 @@ body {
   box-shadow: 0 18px 30px rgba(2, 12, 27, 0.18);
 }
 
+.km-home-metric--blue,
+.km-home-card--blue,
+.km-home-panel--blue,
+.km-home-workflow-step--blue {
+  border-color: rgba(2, 186, 255, 0.32);
+  box-shadow:
+    0 0 0 1px rgba(2, 186, 255, 0.14),
+    0 22px 42px rgba(2, 12, 27, 0.3),
+    0 0 24px rgba(2, 186, 255, 0.09);
+}
+
+.km-home-metric--green,
+.km-home-card--green,
+.km-home-panel--green,
+.km-home-workflow-step--green {
+  border-color: rgba(46, 204, 113, 0.32);
+  box-shadow:
+    0 0 0 1px rgba(46, 204, 113, 0.14),
+    0 22px 42px rgba(2, 12, 27, 0.3),
+    0 0 24px rgba(46, 204, 113, 0.08);
+}
+
+.km-home-metric--amber,
+.km-home-card--amber,
+.km-home-panel--amber,
+.km-home-workflow-step--amber {
+  border-color: rgba(245, 166, 35, 0.34);
+  box-shadow:
+    0 0 0 1px rgba(245, 166, 35, 0.14),
+    0 22px 42px rgba(2, 12, 27, 0.3),
+    0 0 24px rgba(245, 166, 35, 0.1);
+}
+
 .km-home-metric__value {
   display: block;
   margin-bottom: 0.35rem;
@@ -1030,6 +1063,10 @@ body {
   padding-bottom: 3rem;
 }
 
+.km-home-section:last-of-type {
+  padding-bottom: 1.4rem;
+}
+
 .km-home-section--band {
   background: linear-gradient(180deg, rgba(12, 26, 46, 0.92), rgba(17, 35, 61, 0.96));
 }
@@ -1044,11 +1081,18 @@ body {
 .km-home-card__eyebrow {
   display: inline-block;
   margin-bottom: 0.85rem;
-  color: #ffd86a;
   font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.km-home-eyebrow {
+  color: #ffd86a;
+}
+
+.km-home-card__eyebrow {
+  color: var(--kb-radar-cyan-soft);
 }
 
 .km-home-section-heading h2 {
@@ -1066,6 +1110,18 @@ body {
 .km-home-card-grid,
 .km-home-workflow,
 .km-home-command-grid {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.km-home-showcase {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.85fr);
+  gap: 1.35rem;
+  align-items: stretch;
+}
+
+.km-home-showcase-stack {
   display: grid;
   gap: 1.25rem;
 }
@@ -1088,6 +1144,7 @@ body {
 .km-home-panel,
 .km-home-workflow-step,
 .km-home-command-card,
+.km-home-terminal-window,
 .km-home-cta {
   border: 1px solid var(--kb-radar-border);
   border-radius: 22px;
@@ -1099,6 +1156,18 @@ body {
 .km-home-panel,
 .km-home-workflow-step {
   padding: 1.55rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.km-home-card::after,
+.km-home-panel::after,
+.km-home-workflow-step::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at top right, rgba(2, 186, 255, 0.1), transparent 38%);
 }
 
 .km-home-card h3,
@@ -1125,6 +1194,18 @@ body {
 .km-home-panel ul {
   margin: 0.9rem 0 0;
   padding-left: 1.15rem;
+}
+
+.km-home-card--green::after,
+.km-home-panel--green::after,
+.km-home-workflow-step--green::after {
+  background: radial-gradient(circle at top right, rgba(46, 204, 113, 0.11), transparent 38%);
+}
+
+.km-home-card--amber::after,
+.km-home-panel--amber::after,
+.km-home-workflow-step--amber::after {
+  background: radial-gradient(circle at top right, rgba(245, 166, 35, 0.12), transparent 38%);
 }
 
 .km-home-table-wrap {
@@ -1219,6 +1300,62 @@ body {
   overflow: hidden;
 }
 
+.km-home-terminal-window {
+  overflow: hidden;
+  border-color: rgba(2, 186, 255, 0.26);
+  box-shadow:
+    0 0 0 1px rgba(2, 186, 255, 0.12),
+    0 22px 42px rgba(2, 12, 27, 0.3),
+    0 0 24px rgba(2, 186, 255, 0.08);
+}
+
+.km-home-terminal-window__bar {
+  display: flex;
+  gap: 0.45rem;
+  padding: 0.9rem 1rem 0;
+}
+
+.km-home-terminal-window__bar span {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 999px;
+  background: rgba(159, 184, 214, 0.45);
+}
+
+.km-home-terminal-window__bar span:nth-child(1) {
+  background: #ff5f57;
+}
+
+.km-home-terminal-window__bar span:nth-child(2) {
+  background: #febc2e;
+}
+
+.km-home-terminal-window__bar span:nth-child(3) {
+  background: #28c840;
+}
+
+.km-home-terminal-window__meta {
+  padding: 0.65rem 1.1rem 0.2rem;
+  color: #8eb6d7;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.km-home-terminal-window pre {
+  margin: 0;
+}
+
+.km-home-terminal-window code {
+  display: block;
+  padding: 0.7rem 1.1rem 1.25rem;
+  color: #dbeafe;
+  font-size: 0.95rem;
+  line-height: 1.72;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .km-home-command-card .km-home-card__eyebrow {
   margin: 1rem 1.1rem 0.3rem;
 }
@@ -1256,13 +1393,51 @@ body {
 [data-md-color-scheme="default"] .km-home-panel,
 [data-md-color-scheme="default"] .km-home-workflow-step,
 [data-md-color-scheme="default"] .km-home-command-card,
+[data-md-color-scheme="default"] .km-home-terminal-window,
 [data-md-color-scheme="default"] .km-home-cta,
 [data-md-color-scheme="light"] .km-home-card,
 [data-md-color-scheme="light"] .km-home-panel,
 [data-md-color-scheme="light"] .km-home-workflow-step,
 [data-md-color-scheme="light"] .km-home-command-card,
+[data-md-color-scheme="light"] .km-home-terminal-window,
 [data-md-color-scheme="light"] .km-home-cta {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(245, 249, 255, 0.98));
+}
+
+[data-md-color-scheme="default"] .km-home-metric--blue,
+[data-md-color-scheme="default"] .km-home-card--blue,
+[data-md-color-scheme="default"] .km-home-panel--blue,
+[data-md-color-scheme="default"] .km-home-workflow-step--blue,
+[data-md-color-scheme="light"] .km-home-metric--blue,
+[data-md-color-scheme="light"] .km-home-card--blue,
+[data-md-color-scheme="light"] .km-home-panel--blue,
+[data-md-color-scheme="light"] .km-home-workflow-step--blue {
+  border-color: rgba(2, 186, 255, 0.24);
+  box-shadow: 0 0 0 1px rgba(2, 113, 255, 0.06), 0 16px 30px rgba(15, 23, 42, 0.08), 0 0 18px rgba(2, 186, 255, 0.08);
+}
+
+[data-md-color-scheme="default"] .km-home-metric--green,
+[data-md-color-scheme="default"] .km-home-card--green,
+[data-md-color-scheme="default"] .km-home-panel--green,
+[data-md-color-scheme="default"] .km-home-workflow-step--green,
+[data-md-color-scheme="light"] .km-home-metric--green,
+[data-md-color-scheme="light"] .km-home-card--green,
+[data-md-color-scheme="light"] .km-home-panel--green,
+[data-md-color-scheme="light"] .km-home-workflow-step--green {
+  border-color: rgba(46, 204, 113, 0.24);
+  box-shadow: 0 0 0 1px rgba(46, 204, 113, 0.06), 0 16px 30px rgba(15, 23, 42, 0.08), 0 0 18px rgba(46, 204, 113, 0.06);
+}
+
+[data-md-color-scheme="default"] .km-home-metric--amber,
+[data-md-color-scheme="default"] .km-home-card--amber,
+[data-md-color-scheme="default"] .km-home-panel--amber,
+[data-md-color-scheme="default"] .km-home-workflow-step--amber,
+[data-md-color-scheme="light"] .km-home-metric--amber,
+[data-md-color-scheme="light"] .km-home-card--amber,
+[data-md-color-scheme="light"] .km-home-panel--amber,
+[data-md-color-scheme="light"] .km-home-workflow-step--amber {
+  border-color: rgba(245, 166, 35, 0.24);
+  box-shadow: 0 0 0 1px rgba(245, 166, 35, 0.06), 0 16px 30px rgba(15, 23, 42, 0.08), 0 0 18px rgba(245, 166, 35, 0.06);
 }
 
 [data-md-color-scheme="default"] .km-home-section--band,
@@ -1271,8 +1446,15 @@ body {
 }
 
 [data-md-color-scheme="default"] .km-home-command-card code,
-[data-md-color-scheme="light"] .km-home-command-card code {
+[data-md-color-scheme="default"] .km-home-terminal-window code,
+[data-md-color-scheme="light"] .km-home-command-card code,
+[data-md-color-scheme="light"] .km-home-terminal-window code {
   color: #14304f;
+}
+
+[data-md-color-scheme="default"] .km-home-terminal-window__meta,
+[data-md-color-scheme="light"] .km-home-terminal-window__meta {
+  color: #497299;
 }
 
 [data-md-color-scheme="default"] .km-home-table th,
@@ -1291,6 +1473,10 @@ body {
 @media (max-width: 900px) {
   .km-home-card-grid--2,
   .km-home-command-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .km-home-showcase {
     grid-template-columns: 1fr;
   }
 
