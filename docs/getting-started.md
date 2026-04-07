@@ -38,6 +38,12 @@ Show-KubeMemo -Kind Deployment -Namespace prod -Name orders-api
 Open-KubeMemoTui
 ```
 
+Start watching for captured activity:
+
+```powershell
+Start-KubeMemoActivityCapture -Namespace prod -Kind Deployment
+```
+
 ## Core model
 
 - Durable memos live in `memos.notes.kubememo.io`

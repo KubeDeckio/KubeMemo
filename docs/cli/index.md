@@ -7,6 +7,7 @@ KubeMemo is now a Go-native CLI. The PowerShell module wraps this binary rather 
 ```bash
 kubememo get --namespace prod --output json
 kubememo show --kind Deployment --namespace prod --name orders-api
+kubememo watch-activity --namespace prod --kind Deployment
 kubememo tui
 ```
 
@@ -23,3 +24,4 @@ kubememo tui
 - JSON for scripting
 - Memo-style card rendering for terminal reading
 - TUI for interactive browsing
+- Watch mode for auto-captured runtime activity memos

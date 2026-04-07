@@ -65,7 +65,7 @@ jobs:
             fi
 
             GOOS="$goos" GOARCH="$goarch" CGO_ENABLED=0 \
-              go build -trimpath -ldflags="-s -w" -o "$bin_dir/kubememo$ext" ./cmd/kubememo
+              go build -trimpath -ldflags="-s -w -X github.com/KubeDeckio/KubeMemo/internal/cli.version=${version}" -o "$bin_dir/kubememo$ext" ./cmd/kubememo
 
             cp "$bin_dir/kubememo$ext" "$module_stage/bin/${goos}-${goarch}/"
 

@@ -1,6 +1,6 @@
 @{
     RootModule        = 'KubeMemo.psm1'
-    ModuleVersion     = '0.1.0'
+    ModuleVersion     = '0.0.1'
     GUID              = '3fcdbe58-4906-4f57-91b7-f80995d8f53c'
     Author            = 'Richard Hooper'
     CompanyName       = 'Kubedeck'
@@ -13,6 +13,7 @@
         'Update-KubeMemo',
         'Test-KubeMemoInstallation',
         'Get-KubeMemoInstallationStatus',
+        'Get-KubeMemoVersion',
         'Open-KubeMemoTui',
         'Get-KubeMemo',
         'Find-KubeMemo',
@@ -27,6 +28,7 @@
         'Test-KubeMemoRuntimeStore',
         'Clear-KubeMemo',
         'Get-KubeMemoActivity',
+        'Start-KubeMemoActivityCapture',
         'Get-KubeMemoConfig'
     )
     CmdletsToExport   = @()

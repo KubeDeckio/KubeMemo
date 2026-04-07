@@ -25,7 +25,7 @@
     
     
       
-        <title>Overview - KubeMemo by KubeDeck</title>
+        <title>Overview - KubeMemo</title>
       
     
     
@@ -92,7 +92,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="KubeMemo by KubeDeck" class="md-header__button md-logo" aria-label="KubeMemo by KubeDeck" data-md-component="logo">
+    <a href=".." title="KubeMemo" class="md-header__button md-logo" aria-label="KubeMemo" data-md-component="logo">
       
   <img src="../images/logo.svg" alt="logo">
 
@@ -105,7 +105,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            KubeMemo by KubeDeck
+            KubeMemo
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -405,12 +405,12 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="KubeMemo by KubeDeck" class="md-nav__button md-logo" aria-label="KubeMemo by KubeDeck" data-md-component="logo">
+    <a href=".." title="KubeMemo" class="md-nav__button md-logo" aria-label="KubeMemo" data-md-component="logo">
       
   <img src="../images/logo.svg" alt="logo">
 
     </a>
-    KubeMemo by KubeDeck
+    KubeMemo
   </label>
   
     <div class="md-nav__source">
@@ -1186,6 +1186,7 @@
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>kubememo<span class="w"> </span>get<span class="w"> </span>--namespace<span class="w"> </span>prod<span class="w"> </span>--output<span class="w"> </span>json
 kubememo<span class="w"> </span>show<span class="w"> </span>--kind<span class="w"> </span>Deployment<span class="w"> </span>--namespace<span class="w"> </span>prod<span class="w"> </span>--name<span class="w"> </span>orders-api
+kubememo<span class="w"> </span>watch-activity<span class="w"> </span>--namespace<span class="w"> </span>prod<span class="w"> </span>--kind<span class="w"> </span>Deployment
 kubememo<span class="w"> </span>tui
 </code></pre></div>
 <h2 id="human-facing-defaults">Human-facing defaults<a class="headerlink" href="#human-facing-defaults" title="Permanent link">&para;</a></h2>
@@ -1200,6 +1201,7 @@ kubememo<span class="w"> </span>tui
 <li>JSON for scripting</li>
 <li>Memo-style card rendering for terminal reading</li>
 <li>TUI for interactive browsing</li>
+<li>Watch mode for auto-captured runtime activity memos</li>
 </ul>
 
 

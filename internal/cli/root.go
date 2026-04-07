@@ -3,6 +3,9 @@ package cli
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/KubeDeckio/KubeMemo/internal/config"
@@ -16,6 +19,8 @@ type rootOptions struct {
 	cfg     config.Config
 	service *service.Service
 }
+
+var version = "dev"
 
 func NewRootCommand() *cobra.Command {
 	opts := &rootOptions{cfg: config.Default()}
@@ -41,6 +46,7 @@ func NewRootCommand() *cobra.Command {
 		newUpdateCmd(opts),
 		newTestInstallationCmd(opts),
 		newStatusCmd(opts),
+		newVersionCmd(),
 		newGetCmd(opts),
 		newFindCmd(opts),
 		newShowCmd(opts),
@@ -54,10 +60,26 @@ func NewRootCommand() *cobra.Command {
 		newTestRuntimeStoreCmd(opts),
 		newClearCmd(opts),
 		newActivityCmd(opts),
+		newWatchActivityCmd(opts),
 		newConfigCmd(opts),
 		newTuiCmd(opts),
 	)
 
+	return cmd
+}
+
+func newVersionCmd() *cobra.Command {
+	var output string
+	cmd := &cobra.Command{
+		Use:   "version",
+		Short: "Show the KubeMemo version",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return writeOutput(output, map[string]any{
+				"version": version,
+			})
+		},
+	}
+	addOutputFlag(cmd, &output)
 	return cmd
 }
 
@@ -480,6 +502,37 @@ func newActivityCmd(opts *rootOptions) *cobra.Command {
 	cmd.Flags().StringVar(&kind, "kind", "", "Target kind")
 	cmd.Flags().StringVar(&namespace, "namespace", "", "Target namespace")
 	cmd.Flags().StringVar(&name, "name", "", "Target name")
+	cmd.Flags().StringVar(&runtimeNamespace, "runtime-namespace", opts.cfg.RuntimeNamespace, "Runtime namespace")
+	addOutputFlag(cmd, &output)
+	return cmd
+}
+
+func newWatchActivityCmd(opts *rootOptions) *cobra.Command {
+	var output, runtimeNamespace string
+	var namespaces, kinds []string
+	cmd := &cobra.Command{
+		Use:   "watch-activity",
+		Short: "Watch Kubernetes resources and auto-capture runtime activity memos",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx, stop := signal.NotifyContext(cmd.Context(), os.Interrupt, syscall.SIGTERM)
+			defer stop()
+
+			if output != "" && output != "text" {
+				return fmt.Errorf("watch-activity currently supports only text output")
+			}
+
+			fmt.Println("KubeMemo activity capture started. Press Ctrl+C to stop.")
+			return opts.service.StartActivityCapture(ctx, runtimeNamespace, namespaces, kinds, func(evt service.ActivityEvent) {
+				status := "captured"
+				if evt.Deduplicated {
+					status = "deduplicated"
+				}
+				fmt.Printf("[%s] %s %s %s %s -> %s\n", status, evt.Target.Kind, evt.Target.Namespace, evt.Target.Name, evt.OldValue, evt.NewValue)
+			})
+		},
+	}
+	cmd.Flags().StringSliceVar(&namespaces, "namespace", nil, "Namespace scope to watch; empty watches all accessible namespaces")
+	cmd.Flags().StringSliceVar(&kinds, "kind", nil, "Kinds to watch; defaults to configured activity kinds")
 	cmd.Flags().StringVar(&runtimeNamespace, "runtime-namespace", opts.cfg.RuntimeNamespace, "Runtime namespace")
 	addOutputFlag(cmd, &output)
 	return cmd

@@ -133,6 +133,7 @@ Native CLI:
 ```bash
 kubememo get --namespace prod --output json
 kubememo show --kind Deployment --namespace prod --name orders-api
+kubememo version
 kubememo tui
 ```
 
@@ -208,6 +209,18 @@ Get-KubeMemo -IncludeRuntime | Select-Object Id, StoreType, CreatedBy, UpdatedBy
 
 When available, KubeMemo uses `kubectl auth whoami` so the actor reflects the RBAC username seen by the cluster, not just the local shell user.
 
+Start activity auto-capture:
+
+```powershell
+Start-KubeMemoActivityCapture -Namespace prod -Kind Deployment
+```
+
+Native CLI:
+
+```bash
+kubememo watch-activity --namespace prod --kind Deployment
+```
+
 Export durable notes for GitOps workflows:
 
 ```powershell
@@ -238,6 +251,7 @@ Public commands exported by the module:
 - `Find-KubeMemo` searches durable and runtime notes by default, with `-DurableOnly` available from the PowerShell wrapper.
 - `Show-KubeMemo` renders memo-style cards for a target in the terminal and includes runtime notes by default.
 - `Open-KubeMemoTui` opens the interactive memo board for browsing and reading notes, including runtime notes by default.
+- `Get-KubeMemoVersion` returns the bundled Go CLI version from the PowerShell wrapper.
 
 ### Write and remove
 
@@ -246,7 +260,8 @@ Public commands exported by the module:
 - `Remove-KubeMemo` removes a memo or deletes expired runtime memos.
 - `Clear-KubeMemo` clears runtime memos, with `-ExpiredOnly` support.
 - `New-KubeMemo` and `Set-KubeMemo` support `-OutputPath` for Git-managed durable manifests.
-- `-AnnotateResource` remains unsupported in the Go core today and will fail clearly if used from the PowerShell wrapper.
+- `-AnnotateResource` patches lightweight resource annotations on direct cluster writes.
+- `Start-KubeMemoActivityCapture` starts the watcher-based activity auto-capture loop.
 
 ### GitOps and portability
 

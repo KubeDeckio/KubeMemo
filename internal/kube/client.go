@@ -16,6 +16,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/yaml"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/discovery/cached/memory"
 	"k8s.io/client-go/dynamic"
@@ -271,6 +272,15 @@ func (c *Client) List(ctx context.Context, gvr schema.GroupVersionResource, name
 		return resourceClient.Namespace(namespace).List(ctx, metav1.ListOptions{})
 	}
 	return resourceClient.List(ctx, metav1.ListOptions{})
+}
+
+func (c *Client) Watch(ctx context.Context, gvr schema.GroupVersionResource, namespace, resourceVersion string) (watch.Interface, error) {
+	resourceClient := c.dynamic.Resource(gvr)
+	opts := metav1.ListOptions{ResourceVersion: resourceVersion, Watch: true}
+	if namespace != "" {
+		return resourceClient.Namespace(namespace).Watch(ctx, opts)
+	}
+	return resourceClient.Watch(ctx, opts)
 }
 
 func KubeconfigPath() string {

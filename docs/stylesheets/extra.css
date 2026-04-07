@@ -43,6 +43,18 @@ body {
     radial-gradient(circle at top left, rgba(2, 186, 255, 0.08), transparent 24%),
     radial-gradient(circle at top right, rgba(0, 113, 255, 0.1), transparent 24%),
     var(--md-default-bg-color);
+  font-size: 18px;
+  line-height: 1.65;
+}
+
+.md-typeset {
+  font-size: 0.9rem;
+  line-height: 1.75;
+}
+
+.md-typeset p,
+.md-typeset li {
+  font-size: 0.95rem;
 }
 
 h1,
@@ -224,6 +236,15 @@ h4 {
   color: #eaf3ff;
 }
 
+.km-card p,
+.km-panel li,
+.km-step p,
+.km-memo-preview__body,
+.km-callout {
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
 .km-card h2,
 .km-panel h3,
 .km-step h3,
@@ -303,6 +324,14 @@ h4 {
 }
 
 @media (max-width: 900px) {
+  body {
+    font-size: 16px;
+  }
+
+  .md-typeset {
+    font-size: 0.84rem;
+  }
+
   .km-grid--2,
   .km-grid--3 {
     grid-template-columns: 1fr;

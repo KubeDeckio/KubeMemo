@@ -6,6 +6,8 @@ builds:
   - id: kubememo
     main: ./cmd/kubememo
     binary: kubememo
+    ldflags:
+      - -s -w -X github.com/KubeDeckio/KubeMemo/internal/cli.version={{ .Version }}
     goos:
       - linux
       - darwin

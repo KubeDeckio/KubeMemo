@@ -68,6 +68,13 @@ function Get-KubeMemoInstallationStatus {
     Invoke-KubeMemoBinary -Arguments @('status', '--output', 'json', '--runtime-namespace', $RuntimeNamespace) -ParseJson
 }
 
+function Get-KubeMemoVersion {
+    [CmdletBinding()]
+    param()
+
+    Invoke-KubeMemoBinary -Arguments @('version', '--output', 'json') -ParseJson
+}
+
 function Open-KubeMemoTui {
     [CmdletBinding()]
     param(
@@ -340,6 +347,24 @@ function Get-KubeMemoActivity {
     if ($Namespace) { $args += @('--namespace', $Namespace) }
     if ($Name) { $args += @('--name', $Name) }
     Invoke-KubeMemoBinary -Arguments $args -ParseJson
+}
+
+function Start-KubeMemoActivityCapture {
+    [CmdletBinding()]
+    param(
+        [string[]]$Namespace,
+        [string[]]$Kind,
+        [string]$RuntimeNamespace = (Get-KubeMemoConfigInternal).RuntimeNamespace
+    )
+
+    $args = @('watch-activity', '--runtime-namespace', $RuntimeNamespace)
+    foreach ($ns in @($Namespace | Where-Object { $_ })) {
+        $args += @('--namespace', $ns)
+    }
+    foreach ($item in @($Kind | Where-Object { $_ })) {
+        $args += @('--kind', $item)
+    }
+    Invoke-KubeMemoBinary -Arguments $args -PassthruTerminal
 }
 
 function Get-KubeMemoConfig {

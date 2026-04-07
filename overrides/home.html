@@ -5,21 +5,21 @@
   <section class="km-hero">
     <div class="km-hero__backdrop"></div>
     <div class="km-hero__content">
-      <div class="km-kicker">Kubedeck tool • Kubernetes operational memory</div>
-      <h1>KubeMemo gives your cluster memory.</h1>
+      <div class="km-kicker">Kubedeck tool • operational context for Kubernetes</div>
+      <h1>Stop losing the why behind cluster changes.</h1>
       <p>
-        Durable notes, temporary runtime notes, and operator breadcrumbs for Kubernetes
-        resources, namespaces, and logical applications.
+        KubeMemo lets operators attach warnings, runbooks, ownership, temporary incident
+        notes, and live change breadcrumbs directly to Kubernetes targets.
       </p>
       <div class="km-hero__actions">
         <a class="km-button" href="{{ 'getting-started/' | url }}">Get Started</a>
         <a class="km-button km-button--secondary" href="{{ config.repo_url }}">GitHub</a>
       </div>
       <div class="km-hero__tags">
-        <span>Go CLI + TUI</span>
-        <span>PowerShell wrapper</span>
-        <span>GitOps aware</span>
-        <span>Runtime memo store</span>
+        <span>Warnings and runbooks</span>
+        <span>Temporary incident notes</span>
+        <span>Auto-captured activity</span>
+        <span>GitOps-aware durable workflow</span>
       </div>
     </div>
   </section>
@@ -27,43 +27,43 @@
   <section class="km-section km-section--tight">
     <div class="km-grid km-grid--3">
       <article class="km-card">
-        <div class="km-card__eyebrow">Durable Store</div>
-        <h2>Curated memory that survives the incident</h2>
-        <p>Runbooks, ownership, warnings, maintenance notes, suppressions, and long-lived operational context.</p>
+        <div class="km-card__eyebrow">Leave a warning</div>
+        <h2>Attach durable context to the thing that needs it</h2>
+        <p>Put ownership notes, runbooks, maintenance guidance, and warnings on the resource, namespace, or app that operators are looking at.</p>
       </article>
       <article class="km-card">
-        <div class="km-card__eyebrow">Runtime Store</div>
-        <h2>Temporary slips for live operations</h2>
-        <p>Incident notes, handover context, activity breadcrumbs, and expiring runtime guidance outside durable Git-managed objects.</p>
+        <div class="km-card__eyebrow">Work the incident</div>
+        <h2>Keep temporary notes temporary</h2>
+        <p>Use runtime memos for handovers, incident breadcrumbs, and short-lived advice without polluting long-term curated records.</p>
       </article>
       <article class="km-card">
-        <div class="km-card__eyebrow">Operator UX</div>
-        <h2>Memo-style CLI and TUI</h2>
-        <p>Read notes as pinned memo cards in the terminal and browse them from an interactive board built for cluster operators.</p>
+        <div class="km-card__eyebrow">See what changed</div>
+        <h2>Capture meaningful live changes as breadcrumbs</h2>
+        <p>Watch for scaling and other high-value resource changes, then turn them into runtime activity memos operators can read later.</p>
       </article>
     </div>
   </section>
 
   <section class="km-section km-band">
     <div class="km-section__inner">
-      <h2>Why KubeMemo exists</h2>
+      <h2>What KubeMemo actually does</h2>
       <div class="km-grid km-grid--2">
         <div class="km-panel">
-          <h3>Without KubeMemo</h3>
+          <h3>Without it</h3>
           <ul>
-            <li>Warnings disappear into chat threads and incident docs.</li>
-            <li>Manual changes are hard to explain after the fact.</li>
-            <li>Ownership and maintenance context lives outside the cluster.</li>
-            <li>Temporary notes get mixed into permanent records.</li>
+            <li>You find a Deployment, but not the warning someone wrote in chat last week.</li>
+            <li>You see a scale change, but not why it happened.</li>
+            <li>You inherit an incident and the temporary context is scattered.</li>
+            <li>You know there is a runbook somewhere, but not attached to the resource you are touching.</li>
           </ul>
         </div>
         <div class="km-panel">
-          <h3>With KubeMemo</h3>
+          <h3>With it</h3>
           <ul>
-            <li>Resources carry discoverable memo metadata through annotations.</li>
-            <li>Durable and runtime notes stay separate and mode-aware.</li>
-            <li>GitOps clusters keep durable notes in Git and runtime notes live.</li>
-            <li>Operators can see the full story from CLI, TUI, or <code>kubectl describe</code>.</li>
+            <li><code>kubectl describe</code> shows that memo context exists and how to open it.</li>
+            <li>Durable memos and runtime memos stay separate on purpose.</li>
+            <li>Operators can browse the story from CLI cards or the memo board TUI.</li>
+            <li>GitOps clusters keep durable notes in Git while still allowing safe runtime context.</li>
           </ul>
         </div>
       </div>
@@ -72,22 +72,22 @@
 
   <section class="km-section">
     <div class="km-section__inner">
-      <h2>Three-step workflow</h2>
+      <h2>Three-step operator workflow</h2>
       <div class="km-grid km-grid--3">
         <article class="km-step">
           <span class="km-step__num">1</span>
-          <h3>Install the stores</h3>
-          <p>Bootstrap CRDs, optional runtime namespace, and optional RBAC with <code>Install-KubeMemo</code> or the Go CLI.</p>
+          <h3>Attach durable knowledge</h3>
+          <p>Leave a warning, ownership note, or rollout guidance on the thing operators will actually inspect.</p>
         </article>
         <article class="km-step">
           <span class="km-step__num">2</span>
-          <h3>Attach context</h3>
-          <p>Create durable memos for runbooks and runtime memos for live work without mixing the two models.</p>
+          <h3>Capture live context</h3>
+          <p>Add temporary runtime notes during incidents and let activity capture write useful breadcrumbs as resources change.</p>
         </article>
         <article class="km-step">
           <span class="km-step__num">3</span>
-          <h3>Read it where you work</h3>
-          <p>Use <code>kubememo show</code>, <code>Open-KubeMemoTui</code>, or annotations on the resource to surface the right context fast.</p>
+          <h3>Read it in the terminal</h3>
+          <p>Use memo cards, the TUI board, or resource annotations to recover context fast when someone is under pressure.</p>
         </article>
       </div>
     </div>
@@ -97,7 +97,7 @@
     <div class="km-section__inner">
       <div class="km-memo-preview">
         <div class="km-memo-preview__pin">📌</div>
-        <div class="km-memo-preview__type">ADVISORY</div>
+        <div class="km-memo-preview__type">WARNING</div>
         <h3>Orders API warm-up behavior</h3>
         <p class="km-memo-preview__meta">Deployment/prod/orders-api</p>
         <p class="km-memo-preview__body">
@@ -105,8 +105,8 @@
         </p>
       </div>
       <div class="km-callout">
-        <strong>Hosted at kubememo.kubedeck.io.</strong>
-        The docs site uses the same Material/MkDocs setup and Kubedeck visual language as the KubeBuddy docs, with a KubeMemo-specific homepage override.
+        <strong>KubeMemo is built for the operator in front of the terminal.</strong>
+        The product story is simple: attach context to Kubernetes targets, keep durable and runtime notes separate, and surface the right memo at the right moment.
       </div>
     </div>
   </section>

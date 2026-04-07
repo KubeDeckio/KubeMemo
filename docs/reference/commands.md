@@ -14,6 +14,7 @@
 - `Find-KubeMemo`
 - `Show-KubeMemo`
 - `Open-KubeMemoTui`
+- `Get-KubeMemoVersion`
 
 ## Write and remove
 
@@ -31,6 +32,7 @@
 - `Test-KubeMemoRuntimeStore`
 - `Get-KubeMemoConfig`
 - `Get-KubeMemoActivity`
+- `Start-KubeMemoActivityCapture`
 
 ## Common examples
 

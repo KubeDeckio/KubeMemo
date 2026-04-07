@@ -15,6 +15,8 @@ KubeMemo still ships as a PowerShell module, but the module is now a thin wrappe
 Get-KubeMemo -Namespace prod
 Show-KubeMemo -Kind Deployment -Namespace prod -Name orders-api
 Open-KubeMemoTui
+Get-KubeMemoVersion
+Start-KubeMemoActivityCapture -Namespace prod -Kind Deployment
 ```
 
 ## Actor stamping
