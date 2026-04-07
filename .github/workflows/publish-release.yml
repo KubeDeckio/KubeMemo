@@ -23,10 +23,14 @@ jobs:
         run: |
           set -euo pipefail
           tag="${TAG#v}"
-          if [[ "$tag" == *-rc* || "$tag" == *-beta* || "$tag" == *-alpha* ]]; then
+          if [[ "$tag" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-(.+)$ ]]; then
             echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
+            echo "stable_version=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+            echo "prerelease_label=${BASH_REMATCH[2]}" >> "$GITHUB_OUTPUT"
           else
             echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
+            echo "stable_version=$tag" >> "$GITHUB_OUTPUT"
+            echo "prerelease_label=" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Set up Go
@@ -37,17 +41,35 @@ jobs:
       - name: Set module version from tag
         shell: pwsh
         run: |
-          $version = $Env:TAG -replace '^v', ''
-          (Get-Content ./KubeMemo/KubeMemo.psd1) `
-            -replace "^\s*ModuleVersion\s*=\s*'.*'", "    ModuleVersion     = '$version'" |
-            Set-Content ./KubeMemo/KubeMemo.psd1
+          $version = "${{ steps.prerelease.outputs.stable_version }}"
+          $prerelease = "${{ steps.prerelease.outputs.prerelease_label }}"
+          $manifestPath = "./KubeMemo/KubeMemo.psd1"
+          $content = Get-Content $manifestPath -Raw
+
+          $content = $content -replace "^\s*ModuleVersion\s*=\s*'.*'", "    ModuleVersion     = '$version'"
+
+          if ([string]::IsNullOrWhiteSpace($prerelease)) {
+            $content = $content -replace "(?ms)\r?\n\s*Prerelease\s*=\s*'.*?'", ""
+          }
+          else {
+            if ($content -match "(?ms)PSData\s*=\s*@\{") {
+              if ($content -match "(?ms)\r?\n\s*Prerelease\s*=\s*'.*?'") {
+                $content = $content -replace "(?ms)(\r?\n\s*Prerelease\s*=\s*').*?(')", "`$1$prerelease`$2"
+              }
+              else {
+                $content = $content -replace "(?ms)(PSData\s*=\s*@\{)", "`$1`r`n            Prerelease = '$prerelease'"
+              }
+            }
+          }
+
+          Set-Content -Path $manifestPath -Value $content
 
       - name: Build release archives and module bundle
         shell: bash
         run: |
           set -euo pipefail
 
-          version="${TAG#v}"
+          version="${{ steps.prerelease.outputs.stable_version }}"
           release_dir="dist/release"
           module_stage="dist/module/KubeMemo"
 
@@ -102,17 +124,31 @@ jobs:
       - name: Extract release notes from changelog
         shell: pwsh
         run: |
-          $version = $Env:TAG -replace '^v', ''
+          $version = "${{ steps.prerelease.outputs.stable_version }}"
+          $fullTagVersion = $Env:TAG -replace '^v', ''
           $changelogPath = "CHANGELOG.md"
           $content = Get-Content -Path $changelogPath -Raw
 
-          if ($content -match "(?ms)^##\s+$version\s*$.*?(?=^##\s+|\z)") {
+          if ($content -match "(?ms)^##\s+\[$fullTagVersion\]\s*-\s*.*?(?=^##\s+|\z)") {
+            $matches[0].Trim() | Out-File -FilePath "dist/release/release_notes.md" -Encoding utf8
+          }
+          elseif ($content -match "(?ms)^##\s+\[$version\]\s*-\s*.*?(?=^##\s+|\z)") {
+            $matches[0].Trim() | Out-File -FilePath "dist/release/release_notes.md" -Encoding utf8
+          }
+          elseif ($content -match "(?ms)^##\s+$version\s*$.*?(?=^##\s+|\z)") {
             $matches[0].Trim() | Out-File -FilePath "dist/release/release_notes.md" -Encoding utf8
           }
           else {
-            Write-Host "No changelog section found for version $version."
+            Write-Host "No changelog section found for version $fullTagVersion or $version."
             exit 1
           }
+
+      - name: Upload module bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: psgallery-module
+          path: dist/module/KubeMemo
+          if-no-files-found: error
 
       - name: Create GitHub release and upload assets
         uses: softprops/action-gh-release@v2
@@ -123,6 +159,51 @@ jobs:
           prerelease: ${{ steps.prerelease.outputs.is_prerelease }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-psgallery:
+    needs: build-and-release
+    runs-on: windows-latest
+    steps:
+      - name: Download module bundle artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: psgallery-module
+          path: dist/psgallery/KubeMemo
+
+      - name: Install PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser
+
+      - name: Run PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          $results = Invoke-ScriptAnalyzer -Path ./dist/psgallery/KubeMemo -Recurse -Severity Error, Warning
+          if ($results) {
+            $results | Format-Table RuleName, Severity, ScriptName, Line, Message -AutoSize
+          }
+
+          $errors = $results | Where-Object Severity -eq 'Error'
+          if ($errors) {
+            throw "PSScriptAnalyzer found errors."
+          }
+
+      - name: Validate module manifest and import
+        shell: pwsh
+        run: |
+          $modulePath = Join-Path $PWD 'dist\psgallery\KubeMemo\KubeMemo.psd1'
+          $manifest = Test-ModuleManifest -Path $modulePath
+          Write-Host "Validated module version: $($manifest.Version)"
+          Import-Module $modulePath -Force
+          Get-Command -Module KubeMemo | Select-Object Name
+
+      - name: Publish module to PowerShell Gallery
+        shell: pwsh
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Publish-Module -Path ./dist/psgallery/KubeMemo -NuGetApiKey $env:PSGALLERY_API_KEY -Repository PSGallery
+        env:
+          PSGALLERY_API_KEY: ${{ secrets.PSGALLERY_API_KEY }}
 
   update-homebrew:
     needs: build-and-release
