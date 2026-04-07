@@ -242,7 +242,7 @@ func (m modelState) View() string {
 		detailTitle = lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("45")).Render(" DETAIL  " + render.TargetLabel(*note) + " ")
 	}
 	left := listTitle + "\n" + m.table.View()
-	right := detailTitle + "\n" + m.viewport.View()
+	right := detailTitle + m.renderDetailMeta() + "\n" + m.viewport.View()
 	content := lipgloss.JoinHorizontal(lipgloss.Top, lipgloss.NewStyle().Width(max(48, m.width/2)).Render(left), "  ", lipgloss.NewStyle().Width(max(32, m.width-max(48, m.width/2)-4)).Render(right))
 	status := lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("109")).Render(" STATUS " + m.statusText() + " ")
 	keys := m.renderFooterKeys()
@@ -308,6 +308,29 @@ func (m modelState) renderFooterKeys() string {
 		key.Render(" q ") + desc.Render(" quit"),
 	}
 	return strings.Join(items, "  ")
+}
+
+func (m modelState) renderDetailMeta() string {
+	if m.viewport.TotalLineCount() <= m.viewport.VisibleLineCount() || m.viewport.VisibleLineCount() == 0 {
+		return "\n"
+	}
+
+	position := m.viewport.YOffset + 1
+	total := m.viewport.TotalLineCount()
+	percent := int(m.viewport.ScrollPercent() * 100)
+
+	parts := []string{
+		lipgloss.NewStyle().Foreground(lipgloss.Color("109")).Render(fmt.Sprintf(" scroll %d/%d ", position, total)),
+	}
+	if !m.viewport.AtTop() {
+		parts = append(parts, lipgloss.NewStyle().Foreground(lipgloss.Color("214")).Render("↑ more"))
+	}
+	if !m.viewport.AtBottom() {
+		parts = append(parts, lipgloss.NewStyle().Foreground(lipgloss.Color("214")).Render("↓ more"))
+	}
+	parts = append(parts, lipgloss.NewStyle().Foreground(lipgloss.Color("245")).Render(fmt.Sprintf("%d%%", percent)))
+
+	return "\n" + strings.Join(parts, "  ") + "\n"
 }
 
 func (m modelState) renderHelp() string {

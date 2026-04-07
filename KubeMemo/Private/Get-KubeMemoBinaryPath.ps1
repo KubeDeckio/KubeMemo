@@ -15,6 +15,13 @@ function Get-KubeMemoBinaryPath {
     $candidate = Join-Path -Path $moduleRoot -ChildPath "bin/$osName-$archName/$binaryName"
 
     if (Test-Path -Path $candidate) {
+        if ($osName -ne 'windows') {
+            try {
+                $null = & /bin/chmod 755 $candidate 2>$null
+            } catch {
+                # Ignore chmod failures here and let execution fail with a clearer error later.
+            }
+        }
         return $candidate
     }
 
@@ -33,6 +40,14 @@ function Get-KubeMemoBinaryPath {
     $result = & $go.Source -C $repoRoot build -o $candidate ./cmd/kubememo 2>&1
     if ($LASTEXITCODE -ne 0) {
         throw "Failed to build kubememo binary: $($result -join [Environment]::NewLine)"
+    }
+
+    if ($osName -ne 'windows') {
+        try {
+            $null = & /bin/chmod 755 $candidate 2>$null
+        } catch {
+            # Ignore chmod failures here and let execution fail with a clearer error later.
+        }
     }
 
     return $candidate

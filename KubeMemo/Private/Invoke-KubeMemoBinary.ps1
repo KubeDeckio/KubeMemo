@@ -11,14 +11,24 @@ function Invoke-KubeMemoBinary {
 
     $binary = Get-KubeMemoBinaryPath
     if ($PassthruTerminal) {
-        & $binary @Arguments
-        if ($LASTEXITCODE -ne 0) {
-            throw "kubememo $($Arguments -join ' ') failed with exit code $LASTEXITCODE."
+        try {
+            & $binary @Arguments
+            if ($LASTEXITCODE -ne 0) {
+                throw "kubememo $($Arguments -join ' ') failed with exit code $LASTEXITCODE."
+            }
+        } catch {
+            $message = if ($_.Exception -and $_.Exception.Message) { $_.Exception.Message } else { $_ | Out-String }
+            throw "Failed to execute kubememo binary at '$binary': $message"
         }
         return
     }
 
-    $output = & $binary @Arguments 2>&1
+    try {
+        $output = & $binary @Arguments 2>&1
+    } catch {
+        $message = if ($_.Exception -and $_.Exception.Message) { $_.Exception.Message } else { $_ | Out-String }
+        throw "Failed to execute kubememo binary at '$binary': $message"
+    }
     if ($LASTEXITCODE -ne 0) {
         throw ($output -join [Environment]::NewLine)
     }
