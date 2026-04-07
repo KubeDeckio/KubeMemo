@@ -12,15 +12,17 @@ The native CLI is the primary product surface. It gives you:
 
 ## Homebrew
 
-Once the Homebrew tap is updated, install with:
+Install from the dedicated KubeDeck tap:
 
 ```bash
-brew install KubeDeckio/tap/kubememo
+brew tap KubeDeckio/kubememo
+brew install kubememo
 ```
 
 Upgrade with:
 
 ```bash
+brew update
 brew upgrade kubememo
 ```
 

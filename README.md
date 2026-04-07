@@ -41,7 +41,7 @@ GitHub Actions now handle:
 Required repository secrets:
 
 - `PSGALLERY_API_KEY` for PowerShell Gallery publishing
-- `BREW_BUMP_TOKEN` for updating the Homebrew tap formula
+- `BREW_BUMP_TOKEN` for updating the `KubeDeckio/homebrew-kubememo` formula repo
 
 Tagging a release like `v0.1.1` triggers:
 
@@ -127,6 +127,13 @@ Run the native CLI directly:
 
 ```bash
 ./KubeMemo/bin/$(go env GOOS)-$(go env GOARCH)/kubememo get --output json
+```
+
+Install from Homebrew:
+
+```bash
+brew tap KubeDeckio/kubememo
+brew install kubememo
 ```
 
 ## Usage
