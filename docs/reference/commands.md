@@ -34,6 +34,17 @@
 - `Get-KubeMemoActivity`
 - `Start-KubeMemoActivityCapture`
 
+## Activity capture paths
+
+KubeMemo supports three ways to run activity capture:
+
+- foreground Go CLI watcher:
+  - `kubememo watch-activity`
+- PowerShell wrapper:
+  - `Start-KubeMemoActivityCapture`
+- always-on cluster deployment:
+  - [Helm chart](../installation/helm.md)
+
 ## Common examples
 
 ```powershell

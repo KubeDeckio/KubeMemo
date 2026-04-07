@@ -34,6 +34,15 @@ Install with GitOps-aware checks:
 Install-KubeMemo -GitOpsAware -EnableRuntimeStore
 ```
 
+Install with the optional in-cluster activity watcher:
+
+```powershell
+Install-KubeMemo `
+  -EnableRuntimeStore `
+  -EnableActivityCapture `
+  -ActivityCaptureImage ghcr.io/kubedeckio/kubememo:0.0.1
+```
+
 ## Typical PowerShell workflow
 
 ```powershell
@@ -45,3 +54,10 @@ Open-KubeMemoTui
 ## How PowerShell fits the product
 
 The PowerShell experience uses the native `kubememo` binary underneath, while keeping PowerShell-friendly command names, terminal passthrough for the TUI, and object-returning behavior where it fits PowerShell workflows.
+
+## Related pages
+
+- [Native CLI](native-cli.md)
+- [Windows](windows.md)
+- [Helm chart](helm.md)
+- [Activity capture](../concepts/activity-capture.md)

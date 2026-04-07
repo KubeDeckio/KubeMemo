@@ -63,14 +63,17 @@ nav:
   - Getting Started: getting-started.md
   - Installation:
       - Overview: installation.md
-      - Native CLI: installation/macos-linux.md
+      - Native CLI: installation/native-cli.md
+      - Windows: installation/windows.md
       - PowerShell: installation/powershell.md
+      - Helm Chart: installation/helm.md
   - CLI:
       - Overview: cli/index.md
       - TUI: cli/tui.md
       - PowerShell: cli/powershell.md
   - Concepts:
       - Durable vs Runtime Memos: concepts/stores.md
+      - Activity Capture: concepts/activity-capture.md
       - GitOps Behavior: concepts/gitops.md
       - Annotations: concepts/annotations.md
       - kubectl Describe View: concepts/describe-view.md

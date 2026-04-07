@@ -11,6 +11,18 @@ kubememo watch-activity --namespace prod --kind Deployment
 kubememo tui
 ```
 
+## Activity capture modes
+
+KubeMemo supports both:
+
+- a foreground watcher you start from the CLI
+- an optional always-on in-cluster watcher
+
+See:
+
+- [Activity capture](../concepts/activity-capture.md)
+- [Helm chart](../installation/helm.md)
+
 ## Human-facing defaults
 
 - `kubememo show` includes runtime memos by default

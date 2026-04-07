@@ -1,4 +1,6 @@
-document.addEventListener("DOMContentLoaded", function () {
+var kbTopButtonHandlerBound = false;
+
+function bindKubeMemoTopButton() {
   var topButton = document.querySelector(".md-top");
   if (!topButton) {
     return;
@@ -15,5 +17,17 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   syncTopButton();
-  window.addEventListener("scroll", syncTopButton, { passive: true });
-});
+
+  if (!kbTopButtonHandlerBound) {
+    window.addEventListener("scroll", syncTopButton, { passive: true });
+    kbTopButtonHandlerBound = true;
+  }
+}
+
+document.addEventListener("DOMContentLoaded", bindKubeMemoTopButton);
+
+if (typeof document$ !== "undefined" && document$.subscribe) {
+  document$.subscribe(function () {
+    bindKubeMemoTopButton();
+  });
+}

@@ -10,9 +10,10 @@ The native CLI is the core product experience. If you work primarily in PowerShe
 
 Use the path that best matches how your team works:
 
-- [Native CLI installation](installation/macos-linux.md)
+- [Native CLI installation](installation/native-cli.md)
+- [Windows installation](installation/windows.md)
 - [PowerShell installation](installation/powershell.md)
-- [Helm activity-capture deployment](installation/macos-linux.md#optional-in-cluster-activity-capture-with-helm)
+- [Helm chart deployment](installation/helm.md)
 
 ## Native CLI
 
@@ -49,6 +50,12 @@ Update installed prerequisites:
 
 ```powershell
 Update-KubeMemo -GitOpsAware
+```
+
+Enable the optional in-cluster activity watcher during install:
+
+```powershell
+Install-KubeMemo -EnableRuntimeStore -EnableActivityCapture -ActivityCaptureImage ghcr.io/kubedeckio/kubememo:0.0.1
 ```
 
 ## Build locally
