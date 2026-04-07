@@ -8,6 +8,8 @@
 - `Test-KubeMemoInstallation`
 - `Get-KubeMemoInstallationStatus`
 
+`Test-KubeMemoInstallation` and `Get-KubeMemoInstallationStatus` now include capability summaries so you can see whether the current identity can read durable memos, write runtime memos, patch annotations, and run always-on activity capture safely.
+
 ## Read and search
 
 - `Get-KubeMemo`
@@ -33,6 +35,13 @@
 - `Get-KubeMemoConfig`
 - `Get-KubeMemoActivity`
 - `Start-KubeMemoActivityCapture`
+
+`Export-KubeMemo` now writes a clearer GitOps-oriented layout:
+
+- `namespaces/<namespace>/...`
+- `apps/<app>/...`
+- `resources/<namespace>/<kind>-<name>/...`
+- `runtime/<runtime-namespace>/...`
 
 ## Activity capture paths
 

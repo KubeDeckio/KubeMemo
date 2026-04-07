@@ -59,6 +59,7 @@ type InstallationStatus struct {
 	RuntimeNamespaceInstalled bool              `json:"runtimeNamespaceInstalled"`
 	RbacInstalled             bool              `json:"rbacInstalled"`
 	ActivityCaptureInstalled  bool              `json:"activityCaptureInstalled"`
+	Capabilities              CapabilitySummary `json:"capabilities"`
 	GitOps                    GitOpsState       `json:"gitOps"`
 	RuntimeStore              RuntimeStoreState `json:"runtimeStore"`
 }
@@ -77,6 +78,21 @@ type GitOpsState struct {
 type RuntimeStoreState struct {
 	Enabled bool   `json:"enabled"`
 	Safe    bool   `json:"safe"`
+	Reason  string `json:"reason,omitempty"`
+}
+
+type CapabilitySummary struct {
+	DurableRead      CapabilityState `json:"durableRead"`
+	DurableWrite     CapabilityState `json:"durableWrite"`
+	RuntimeRead      CapabilityState `json:"runtimeRead"`
+	RuntimeWrite     CapabilityState `json:"runtimeWrite"`
+	AnnotationPatch  CapabilityState `json:"annotationPatch"`
+	ActivityCapture  CapabilityState `json:"activityCapture"`
+	ClusterScopeRead CapabilityState `json:"clusterScopeRead"`
+}
+
+type CapabilityState struct {
+	Allowed bool   `json:"allowed"`
 	Reason  string `json:"reason,omitempty"`
 }
 

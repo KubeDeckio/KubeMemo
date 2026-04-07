@@ -15,6 +15,12 @@ Use the path that best matches how your team works:
 - [PowerShell installation](installation/powershell.md)
 - [Helm chart deployment](installation/helm.md)
 
+The Helm chart is published to GHCR as an OCI artifact:
+
+```bash
+helm install kubememo oci://ghcr.io/kubedeckio/charts/kubememo --version 0.0.1
+```
+
 ## Native CLI
 
 Install with Homebrew or download a release asset, then verify the binary:
@@ -58,6 +64,13 @@ Enable the optional in-cluster activity watcher during install:
 Install-KubeMemo -EnableRuntimeStore -EnableActivityCapture -ActivityCaptureImage ghcr.io/kubedeckio/kubememo:0.0.1
 ```
 
+Check cluster prerequisites and current RBAC capabilities:
+
+```powershell
+Get-KubeMemoInstallationStatus
+Test-KubeMemoInstallation
+```
+
 ## Build locally
 
 ```bash
@@ -77,3 +90,52 @@ Run the binary directly:
 - For PowerShell workflows: PowerShell 7+
 - For Helm workflows: Helm 3+
 - For docs development: MkDocs Material
+
+## RBAC expectations
+
+KubeMemo works with different permission levels depending on how you want to use it.
+
+### Read-only use
+
+For read-only usage, the current identity needs:
+
+- `get`, `list`, `watch` on `memos.notes.kubememo.io`
+- `get`, `list`, `watch` on `runtimememos.runtime.notes.kubememo.io`
+
+This is enough for:
+
+- `Get-KubeMemo`
+- `Find-KubeMemo`
+- `Show-KubeMemo`
+- `Open-KubeMemoTui`
+
+### Memo write use
+
+For creating and updating memos, the current identity also needs:
+
+- `create`, `update`, `patch`, `delete` on `memos.notes.kubememo.io`
+- `create`, `update`, `patch`, `delete` on `runtimememos.runtime.notes.kubememo.io`
+
+If you want annotation sync on target resources, the identity also needs:
+
+- `patch` on the target resource kinds you want KubeMemo to annotate
+
+KubeMemo now uses lightweight annotation patching rather than broader full-object updates.
+
+### Install and admin use
+
+For `Install-KubeMemo`, `Update-KubeMemo`, and the optional in-cluster watcher deployment, the current identity may also need:
+
+- CRD management permissions
+- namespace create/update permissions
+- RBAC object create/update permissions
+- Deployment create/update permissions in the runtime namespace
+
+### Optional in-cluster activity capture
+
+The always-on watcher needs:
+
+- `get`, `list`, `watch` on watched resource kinds such as Deployments, Services, Ingresses, HPAs, Gateways, and HTTPRoutes
+- `create`, `update`, `patch`, `get`, `list` on runtime memos
+
+Use `Get-KubeMemoInstallationStatus` or `Test-KubeMemoInstallation` to see the current capability summary for the active identity.

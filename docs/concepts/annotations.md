@@ -116,6 +116,8 @@ In non-GitOps direct-write mode, KubeMemo can sync annotations automatically for
 
 That means creating, updating, or removing memos can keep the target annotations current without a separate manual step.
 
+KubeMemo uses lightweight annotation patching for this path instead of broad full-object updates.
+
 ## GitOps behavior
 
 Annotations need to respect the same operational rules as the rest of KubeMemo.

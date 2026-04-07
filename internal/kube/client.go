@@ -2,6 +2,7 @@ package kube
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"io"
 	"os"
@@ -10,11 +11,13 @@ import (
 	"time"
 
 	authv1 "k8s.io/api/authentication/v1"
+	authzv1 "k8s.io/api/authorization/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
@@ -93,11 +96,50 @@ func New() (*Client, error) {
 	}, nil
 }
 
+func NewForConfig(restConfig *rest.Config, namespace, currentContext string, rawConfig api.Config) (*Client, error) {
+	if strings.TrimSpace(namespace) == "" {
+		namespace = "default"
+	}
+	restConfig = rest.CopyConfig(restConfig)
+	restConfig.Timeout = 20 * time.Second
+
+	clientset, err := kubernetes.NewForConfig(restConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	dyn, err := dynamic.NewForConfig(restConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	disco, err := discovery.NewDiscoveryClientForConfig(restConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	cached := memory.NewMemCacheClient(disco)
+	mapper := restmapper.NewDeferredDiscoveryRESTMapper(cached)
+
+	return &Client{
+		restConfig:     restConfig,
+		clientset:      clientset,
+		dynamic:        dyn,
+		discovery:      disco,
+		mapper:         mapper,
+		rawConfig:      rawConfig,
+		currentNS:      namespace,
+		currentContext: rawConfig.CurrentContext,
+	}, nil
+}
+
 func (c *Client) Config() *rest.Config            { return c.restConfig }
 func (c *Client) Dynamic() dynamic.Interface      { return c.dynamic }
 func (c *Client) Clientset() kubernetes.Interface { return c.clientset }
 func (c *Client) CurrentNamespace() string        { return c.currentNS }
 func (c *Client) CurrentContext() string          { return c.currentContext }
+func (c *Client) RestConfig() *rest.Config        { return rest.CopyConfig(c.restConfig) }
+func (c *Client) RawConfig() api.Config           { return c.rawConfig }
 
 func (c *Client) ServerVersion(ctx context.Context) (string, error) {
 	info, err := c.discovery.ServerVersion()
@@ -128,6 +170,31 @@ func (c *Client) GetActor(ctx context.Context) string {
 	}
 
 	return "unknown"
+}
+
+func (c *Client) CanI(ctx context.Context, verb string, gvr schema.GroupVersionResource, namespace string) (bool, string) {
+	review := &authzv1.SelfSubjectAccessReview{
+		Spec: authzv1.SelfSubjectAccessReviewSpec{
+			ResourceAttributes: &authzv1.ResourceAttributes{
+				Verb:      verb,
+				Group:     gvr.Group,
+				Version:   gvr.Version,
+				Resource:  gvr.Resource,
+				Namespace: namespace,
+			},
+		},
+	}
+	result, err := c.clientset.AuthorizationV1().SelfSubjectAccessReviews().Create(ctx, review, metav1.CreateOptions{})
+	if err != nil {
+		return false, err.Error()
+	}
+	if result.Status.Allowed {
+		return true, ""
+	}
+	if strings.TrimSpace(result.Status.Reason) != "" {
+		return false, result.Status.Reason
+	}
+	return false, "access denied by Kubernetes RBAC"
 }
 
 func (c *Client) ResolveResource(apiVersion, kind string) (*meta.RESTMapping, schema.GroupVersionResource, error) {
@@ -169,7 +236,16 @@ func (c *Client) UpdateTargetAnnotations(ctx context.Context, apiVersion, kind, 
 	if annotations == nil {
 		annotations = map[string]string{}
 	}
-	obj.SetAnnotations(mutate(annotations))
+	updatedAnnotations := mutate(annotations)
+	patchObj := map[string]any{
+		"metadata": map[string]any{
+			"annotations": updatedAnnotations,
+		},
+	}
+	patchBytes, err := json.Marshal(patchObj)
+	if err != nil {
+		return err
+	}
 	resourceClient := c.dynamic.Resource(mapping.Resource)
 	if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
 		ns := obj.GetNamespace()
@@ -179,10 +255,10 @@ func (c *Client) UpdateTargetAnnotations(ctx context.Context, apiVersion, kind, 
 		if strings.TrimSpace(ns) == "" {
 			ns = c.currentNS
 		}
-		_, err = resourceClient.Namespace(ns).Update(ctx, obj, metav1.UpdateOptions{})
+		_, err = resourceClient.Namespace(ns).Patch(ctx, name, types.MergePatchType, patchBytes, metav1.PatchOptions{})
 		return err
 	}
-	_, err = resourceClient.Update(ctx, obj, metav1.UpdateOptions{})
+	_, err = resourceClient.Patch(ctx, name, types.MergePatchType, patchBytes, metav1.PatchOptions{})
 	return err
 }
 

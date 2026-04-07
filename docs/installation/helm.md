@@ -26,7 +26,34 @@ The activity-capture workload is hardened by default:
 - read-only root filesystem
 - resource requests and limits
 
+## RBAC model
+
+The chart installs only the RBAC needed for the optional in-cluster activity watcher.
+
+That includes:
+
+- watch/list/get on the configured Kubernetes resource kinds
+- create/update/patch/get/list on runtime memos
+
+It does not need broad durable memo write access just to run activity capture.
+
+If you also want direct memo CRUD from your own user identity, that is separate from the charted watcher permissions.
+
 ## Install the chart
+
+From GHCR as an OCI chart:
+
+```bash
+helm install kubememo oci://ghcr.io/kubedeckio/charts/kubememo \
+  --version 0.0.1 \
+  --namespace kubememo-runtime \
+  --create-namespace \
+  --set activityCapture.enabled=true \
+  --set image.repository=ghcr.io/kubedeckio/kubememo \
+  --set image.tag=0.0.1
+```
+
+From the local repo checkout:
 
 ```bash
 helm upgrade --install kubememo ./charts/kubememo \
@@ -35,6 +62,12 @@ helm upgrade --install kubememo ./charts/kubememo \
   --set activityCapture.enabled=true \
   --set image.repository=ghcr.io/kubedeckio/kubememo \
   --set image.tag=0.0.1
+```
+
+Pull the packaged chart first if you want to inspect it locally:
+
+```bash
+helm pull oci://ghcr.io/kubedeckio/charts/kubememo --version 0.0.1
 ```
 
 ## What the in-cluster watcher does

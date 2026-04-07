@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
@@ -53,6 +54,10 @@ func New(cfg config.Config) (*Service, error) {
 		return nil, err
 	}
 	return &Service{cfg: cfg, kube: client}, nil
+}
+
+func NewWithClient(cfg config.Config, client *kube.Client) *Service {
+	return &Service{cfg: cfg, kube: client}
 }
 
 func (s *Service) Config() config.Config {
@@ -163,6 +168,7 @@ func (s *Service) TestInstallation(ctx context.Context, runtimeNamespace string)
 	status.RuntimeNamespaceInstalled = nsErr == nil
 	status.RbacInstalled = s.testRbac(ctx)
 	status.ActivityCaptureInstalled = s.testActivityCapture(ctx, runtimeNamespace)
+	status.Capabilities = s.capabilitySummary(ctx, runtimeNamespace)
 	status.GitOps = s.TestGitOpsMode(ctx)
 	status.RuntimeStore = s.TestRuntimeStore(ctx, runtimeNamespace)
 	return status
@@ -187,6 +193,79 @@ func (s *Service) GetInstallationStatus(ctx context.Context, runtimeNamespace st
 		mode = "GitOps with runtime store"
 	}
 	return model.InstallationModeStatus{Mode: mode, Status: status}
+}
+
+func (s *Service) capabilitySummary(ctx context.Context, runtimeNamespace string) model.CapabilitySummary {
+	if runtimeNamespace == "" {
+		runtimeNamespace = s.cfg.RuntimeNamespace
+	}
+	currentNS := s.kube.CurrentNamespace()
+	return model.CapabilitySummary{
+		DurableRead:      s.checkCapability(ctx, "list", durableGVR, ""),
+		DurableWrite:     s.checkCapability(ctx, "create", durableGVR, currentNS),
+		RuntimeRead:      s.checkCapability(ctx, "list", runtimeGVR, runtimeNamespace),
+		RuntimeWrite:     s.checkCapability(ctx, "create", runtimeGVR, runtimeNamespace),
+		AnnotationPatch:  s.checkTargetPatchCapability(ctx),
+		ActivityCapture:  s.checkActivityCaptureCapability(ctx, runtimeNamespace),
+		ClusterScopeRead: s.checkCapability(ctx, "list", durableGVR, ""),
+	}
+}
+
+func (s *Service) checkCapability(ctx context.Context, verb string, gvr schema.GroupVersionResource, namespace string) model.CapabilityState {
+	allowed, reason := s.kube.CanI(ctx, verb, gvr, namespace)
+	if allowed {
+		scope := "cluster scope"
+		if strings.TrimSpace(namespace) != "" {
+			scope = "namespace " + namespace
+		}
+		return model.CapabilityState{Allowed: true, Reason: fmt.Sprintf("%s %s allowed on %s", verb, gvr.Resource, scope)}
+	}
+	if strings.TrimSpace(reason) == "" {
+		reason = fmt.Sprintf("%s denied on %s", verb, gvr.Resource)
+	}
+	return model.CapabilityState{Allowed: false, Reason: reason}
+}
+
+func (s *Service) checkTargetPatchCapability(ctx context.Context) model.CapabilityState {
+	targets := []schema.GroupVersionResource{
+		{Group: "apps", Version: "v1", Resource: "deployments"},
+		{Group: "", Version: "v1", Resource: "namespaces"},
+	}
+	for _, gvr := range targets {
+		ns := s.kube.CurrentNamespace()
+		if gvr.Group == "" && gvr.Resource == "namespaces" {
+			ns = ""
+		}
+		allowed, reason := s.kube.CanI(ctx, "patch", gvr, ns)
+		if allowed {
+			return model.CapabilityState{Allowed: true, Reason: fmt.Sprintf("resource annotation updates allowed on %s", gvr.Resource)}
+		}
+		if strings.TrimSpace(reason) != "" {
+			return model.CapabilityState{Allowed: false, Reason: reason}
+		}
+	}
+	return model.CapabilityState{Allowed: false, Reason: "resource annotation updates are not allowed with current RBAC"}
+}
+
+func (s *Service) checkActivityCaptureCapability(ctx context.Context, runtimeNamespace string) model.CapabilityState {
+	kinds := []schema.GroupVersionResource{
+		{Group: "apps", Version: "v1", Resource: "deployments"},
+		{Group: "gateway.networking.k8s.io", Version: "v1", Resource: "gateways"},
+	}
+	for _, gvr := range kinds {
+		allowed, reason := s.kube.CanI(ctx, "watch", gvr, "")
+		if !allowed {
+			if strings.TrimSpace(reason) == "" {
+				reason = fmt.Sprintf("watch denied on %s", gvr.Resource)
+			}
+			return model.CapabilityState{Allowed: false, Reason: reason}
+		}
+	}
+	runtimeWrite := s.checkCapability(ctx, "create", runtimeGVR, runtimeNamespace)
+	if !runtimeWrite.Allowed {
+		return model.CapabilityState{Allowed: false, Reason: "activity capture cannot write runtime memos: " + runtimeWrite.Reason}
+	}
+	return model.CapabilityState{Allowed: true, Reason: "watch and runtime memo write permissions are present"}
 }
 
 func (s *Service) Install(ctx context.Context, durableOnly, enableRuntimeStore bool, runtimeNamespace string, installRbac, gitOpsAware, enableActivityCapture bool, activityCaptureImage string) (model.InstallationModeStatus, error) {
@@ -372,7 +451,7 @@ func (s *Service) ListNotes(ctx context.Context, includeRuntime bool, runtimeNam
 				list, err = s.kube.List(ctx, durableGVR, s.kube.CurrentNamespace())
 			}
 			if err != nil {
-				return nil, err
+				return nil, permissionError(err, "read durable memos")
 			}
 		}
 		for _, item := range list.Items {
@@ -385,7 +464,7 @@ func (s *Service) ListNotes(ctx context.Context, includeRuntime bool, runtimeNam
 				if k8serrors.IsForbidden(err) || k8serrors.IsNotFound(err) {
 					continue
 				}
-				return nil, err
+				return nil, permissionError(err, "read durable memos")
 			}
 			for _, item := range list.Items {
 				results = append(results, toNote(item, "Durable"))
@@ -398,6 +477,8 @@ func (s *Service) ListNotes(ctx context.Context, includeRuntime bool, runtimeNam
 			for _, item := range list.Items {
 				results = append(results, toNote(item, "Runtime"))
 			}
+		} else if !k8serrors.IsForbidden(err) && !k8serrors.IsNotFound(err) {
+			return nil, permissionError(err, "read runtime memos")
 		}
 	}
 	sort.Slice(results, func(i, j int) bool {
@@ -508,7 +589,7 @@ func (s *Service) NewNote(ctx context.Context, input NewNoteInput) (PersistResul
 		return s.writeManifestResult(obj, store, input.OutputPath)
 	}
 	if err := s.kube.ApplyUnstructured(ctx, obj); err != nil {
-		return PersistResult{}, err
+		return PersistResult{}, permissionError(err, "create "+strings.ToLower(store)+" memo")
 	}
 	created, err := s.kube.Dynamic().Resource(gvr).Namespace(obj.GetNamespace()).Get(ctx, obj.GetName(), metav1.GetOptions{})
 	if err != nil {
@@ -574,7 +655,7 @@ func (s *Service) SetNote(ctx context.Context, input UpdateNoteInput) (PersistRe
 		return s.writeManifestResult(obj, note.StoreType, input.OutputPath)
 	}
 	if err := s.kube.ApplyUnstructured(ctx, obj); err != nil {
-		return PersistResult{}, err
+		return PersistResult{}, permissionError(err, "update "+strings.ToLower(note.StoreType)+" memo")
 	}
 	updated, err := s.kube.Dynamic().Resource(gvr).Namespace(ns).Get(ctx, obj.GetName(), metav1.GetOptions{})
 	if err != nil {
@@ -614,7 +695,7 @@ func (s *Service) RemoveNote(ctx context.Context, id string, expiredRuntimeOnly 
 		return nil, err
 	}
 	if err := s.kube.Delete(ctx, gvr, ns, id); err != nil {
-		return nil, err
+		return nil, permissionError(err, "delete memo")
 	}
 	if s.shouldSyncAnnotations(noteToTarget(note), removeAnnotations) {
 		if err := s.syncTargetAnnotations(ctx, noteToTarget(note), runtimeNamespace, removeAnnotations, ""); err != nil {
@@ -633,7 +714,7 @@ func (s *Service) ClearRuntime(ctx context.Context, expiredOnly bool, runtimeNam
 	}
 	list, err := s.kube.List(ctx, runtimeGVR, runtimeNamespace)
 	if err != nil {
-		return nil, err
+		return nil, permissionError(err, "read runtime memos for cleanup")
 	}
 	removed := []string{}
 	for _, item := range list.Items {
@@ -668,7 +749,10 @@ func (s *Service) Export(ctx context.Context, path string, includeRuntime bool, 
 	}
 	written := []string{}
 	for _, note := range notes {
-		target := filepath.Join(path, note.ID+".yaml")
+		target := filepath.Join(path, noteExportRelativePath(note))
+		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+			return nil, err
+		}
 		data, err := yaml.Marshal(note.RawResource)
 		if err != nil {
 			return nil, err
@@ -682,28 +766,31 @@ func (s *Service) Export(ctx context.Context, path string, includeRuntime bool, 
 }
 
 func (s *Service) Import(ctx context.Context, path string) ([]string, error) {
-	files, err := os.ReadDir(path)
+	applied := []string{}
+	err := filepath.WalkDir(path, func(fullPath string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		if ext := strings.ToLower(filepath.Ext(d.Name())); ext != ".yaml" && ext != ".yml" && ext != ".json" {
+			return nil
+		}
+		content, err := os.ReadFile(fullPath)
+		if err != nil {
+			return err
+		}
+		if err := s.kube.ApplyYAML(ctx, string(content), ""); err != nil {
+			return err
+		}
+		applied = append(applied, fullPath)
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}
-	applied := []string{}
-	for _, file := range files {
-		if file.IsDir() {
-			continue
-		}
-		if ext := strings.ToLower(filepath.Ext(file.Name())); ext != ".yaml" && ext != ".yml" && ext != ".json" {
-			continue
-		}
-		fullPath := filepath.Join(path, file.Name())
-		content, err := os.ReadFile(fullPath)
-		if err != nil {
-			return nil, err
-		}
-		if err := s.kube.ApplyYAML(ctx, string(content), ""); err != nil {
-			return nil, err
-		}
-		applied = append(applied, fullPath)
-	}
+	sort.Strings(applied)
 	return applied, nil
 }
 
@@ -741,7 +828,7 @@ func (s *Service) syncTargetAnnotations(ctx context.Context, target model.Target
 		}
 	}
 	annotations := annotationStateForNotes(matches, preferredID, target)
-	return s.kube.UpdateTargetAnnotations(ctx, target.APIVersion, target.Kind, target.Namespace, target.Name, func(existing map[string]string) map[string]string {
+	err = s.kube.UpdateTargetAnnotations(ctx, target.APIVersion, target.Kind, target.Namespace, target.Name, func(existing map[string]string) map[string]string {
 		for _, key := range []string{annotationEnabled, annotationHasNote, annotationNoteCount, annotationRuntimeCount, annotationSummary, annotationView, annotationRuntimeEnabled, "notes.kubememo.io/note-ref"} {
 			delete(existing, key)
 		}
@@ -750,6 +837,7 @@ func (s *Service) syncTargetAnnotations(ctx context.Context, target model.Target
 		}
 		return existing
 	})
+	return permissionError(err, "patch resource annotations")
 }
 
 func normalizeAnnotationTarget(target model.Target, explicit bool) (model.Target, error) {
@@ -770,6 +858,44 @@ func normalizeAnnotationTarget(target model.Target, explicit bool) (model.Target
 		}
 		return model.Target{}, fmt.Errorf("resource annotations are not supported for app targets")
 	}
+}
+
+func noteExportRelativePath(note model.Note) string {
+	fileName := note.ID + ".yaml"
+	if note.StoreType == "Runtime" {
+		scope := runtimeStorageNamespace(note)
+		return filepath.Join("runtime", scope, fileName)
+	}
+	switch note.TargetMode {
+	case "namespace":
+		return filepath.Join("namespaces", firstNonEmptyString(note.Namespace, "cluster"), fileName)
+	case "app":
+		appDir := firstNonEmptyString(note.AppName, note.AppInstance, "unknown-app")
+		return filepath.Join("apps", slugify(appDir), fileName)
+	default:
+		resourceDir := slugify(strings.ToLower(firstNonEmptyString(note.Kind, "resource")) + "-" + firstNonEmptyString(note.Name, note.ID))
+		namespaceDir := firstNonEmptyString(note.Namespace, "cluster")
+		return filepath.Join("resources", namespaceDir, resourceDir, fileName)
+	}
+}
+
+func runtimeStorageNamespace(note model.Note) string {
+	if metadata, ok := note.RawResource["metadata"].(map[string]any); ok {
+		if ns, ok := metadata["namespace"].(string); ok && strings.TrimSpace(ns) != "" {
+			return ns
+		}
+	}
+	return firstNonEmptyString(note.Namespace, note.Name, "cluster")
+}
+
+func permissionError(err error, action string) error {
+	if err == nil {
+		return nil
+	}
+	if k8serrors.IsForbidden(err) {
+		return fmt.Errorf("permission denied: cannot %s with current Kubernetes RBAC", action)
+	}
+	return err
 }
 
 func (s *Service) shouldSyncAnnotations(target model.Target, explicit bool) bool {

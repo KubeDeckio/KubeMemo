@@ -49,6 +49,7 @@ Tagging a release like `v0.1.1` triggers:
 - a GitHub release with release assets
 - a PowerShell module package containing the wrapper and bundled binaries
 - a multi-architecture GHCR image for optional in-cluster activity capture
+- an OCI-published Helm chart at `ghcr.io/kubedeckio/charts/kubememo`
 
 ## Architecture
 
@@ -61,6 +62,7 @@ Tagging a release like `v0.1.1` triggers:
 - **Durable Notes:** Store long-lived runbooks, ownership notes, warnings, and maintenance guidance in a dedicated CRD.
 - **Runtime Notes:** Capture temporary handover notes, incident context, and expiring operational breadcrumbs in a separate runtime CRD.
 - **GitOps-Aware Behavior:** Block direct durable writes in GitOps mode and generate file-based output for Git-managed workflows.
+- **GitOps-Friendly Export Layout:** Export durable memos into namespace, app, and resource folders instead of a flat dump.
 - **Cluster Bootstrap:** Install and validate CRDs, runtime namespace, and optional RBAC directly from the PowerShell module.
 - **Memo-Style Rendering:** Show durable and runtime context as memo-style terminal cards with color, wrapped content, and clearer note sections.
 - **Built-In TUI:** Browse and view notes from an interactive memo board with `kubememo tui` or `Open-KubeMemoTui`.
@@ -135,6 +137,27 @@ Install from Homebrew:
 brew tap KubeDeckio/kubememo
 brew install kubememo
 ```
+
+Install the Helm chart from GHCR OCI:
+
+```bash
+helm install kubememo oci://ghcr.io/kubedeckio/charts/kubememo --version 0.0.1
+```
+
+Run the opt-in cluster-backed integration smoke test:
+
+```bash
+make test-integration
+```
+
+That smoke path covers:
+
+- install/bootstrap
+- durable and runtime memo creation
+- annotation sync
+- GitOps-style export layout
+- cleanup
+- a restricted-RBAC case where memo creation is allowed but annotation patching is denied
 
 ## Usage
 
@@ -218,6 +241,15 @@ Get-KubeMemo -IncludeRuntime | Select-Object Id, StoreType, CreatedBy, UpdatedBy
 ```
 
 When available, KubeMemo uses `kubectl auth whoami` so the actor reflects the RBAC username seen by the cluster, not just the local shell user.
+
+Installation status commands now also report capability summaries for:
+
+- durable read/write
+- runtime read/write
+- annotation patching
+- always-on activity capture prerequisites
+
+KubeMemo expects different RBAC levels for read-only use, memo writes, annotation patching, and install/admin flows. The installation docs now document those permission levels explicitly.
 
 Start activity auto-capture:
 

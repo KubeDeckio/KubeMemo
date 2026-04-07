@@ -18,6 +18,30 @@ If you want concrete YAML examples for Git-managed durable memos and cluster-man
 
 - [Example manifests](../reference/manifests.md)
 
+## Export layout
+
+`Export-KubeMemo` now writes durable memos into a more practical structure instead of a flat directory:
+
+```text
+ops/
+  kubememo/
+    namespaces/
+      payments-prod/
+        maintenance-window.yaml
+    apps/
+      orders-api/
+        rollout-runbook.yaml
+    resources/
+      prod/
+        deployment-orders-api/
+          warning-warmup.yaml
+    runtime/
+      kubememo-runtime/
+        orders-api-scale-change.yaml
+```
+
+This keeps durable memos easier to review in Git while still allowing runtime memo export when you explicitly include it.
+
 ## Practical rule
 
 - Durable store: curated source of truth

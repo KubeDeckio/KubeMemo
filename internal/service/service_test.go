@@ -1,6 +1,7 @@
 package service
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/KubeDeckio/KubeMemo/internal/model"
@@ -132,5 +133,41 @@ func TestAnnotationSummaryTruncatesSingleMemo(t *testing.T) {
 	}
 	if state[annotationSummary][len(state[annotationSummary])-3:] != "..." {
 		t.Fatalf("expected truncated summary to end with ellipsis, got %q", state[annotationSummary])
+	}
+}
+
+func TestNoteExportRelativePath(t *testing.T) {
+	cases := []struct {
+		name string
+		note model.Note
+		want string
+	}{
+		{
+			name: "durable resource",
+			note: model.Note{ID: "orders-api-warmup", StoreType: "Durable", TargetMode: "resource", Kind: "Deployment", Namespace: "prod", Name: "orders-api"},
+			want: filepath.Join("resources", "prod", "deployment-orders-api", "orders-api-warmup.yaml"),
+		},
+		{
+			name: "durable namespace",
+			note: model.Note{ID: "payments-window", StoreType: "Durable", TargetMode: "namespace", Namespace: "payments-prod"},
+			want: filepath.Join("namespaces", "payments-prod", "payments-window.yaml"),
+		},
+		{
+			name: "durable app",
+			note: model.Note{ID: "orders-runbook", StoreType: "Durable", TargetMode: "app", AppName: "orders-api", AppInstance: "prod"},
+			want: filepath.Join("apps", "orders-api", "orders-runbook.yaml"),
+		},
+		{
+			name: "runtime",
+			note: model.Note{ID: "orders-activity", StoreType: "Runtime", Namespace: "kubememo-runtime"},
+			want: filepath.Join("runtime", "kubememo-runtime", "orders-activity.yaml"),
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := noteExportRelativePath(tc.note); got != tc.want {
+				t.Fatalf("expected %q, got %q", tc.want, got)
+			}
+		})
 	}
 }
