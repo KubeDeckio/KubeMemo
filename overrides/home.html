@@ -6,10 +6,6 @@
   <section class="km-home-hero">
     <div class="km-home-hero__overlay"></div>
     <div class="km-home-hero__inner">
-      <div class="km-home-kicker-row">
-        <span class="km-home-kicker">KubeMemo</span>
-        <span class="km-home-kicker km-home-kicker--soft">Operational memory for Kubernetes</span>
-      </div>
       <h1>Attach the missing context to the exact Kubernetes thing your operators are touching.</h1>
       <p class="km-home-subhead">
         KubeMemo gives teams a durable memo layer for runbooks, warnings, ownership, and maintenance guidance,
@@ -41,7 +37,6 @@
   <section class="km-home-section">
     <div class="km-home-shell">
       <div class="km-home-section-heading">
-        <span class="km-home-eyebrow">Why it exists</span>
         <h2>KubeMemo is built for the operational gap between config, docs, and incident reality.</h2>
         <p>
           Docs are too far away, chat is too temporary, and Git alone does not capture the live context operators need while a cluster is changing.
@@ -72,7 +67,6 @@
   <section class="km-home-section km-home-section--band">
     <div class="km-home-shell">
       <div class="km-home-section-heading">
-        <span class="km-home-eyebrow">Product model</span>
         <h2>Two stores, two jobs, one terminal workflow.</h2>
       </div>
 
@@ -106,7 +100,6 @@
   <section class="km-home-section">
     <div class="km-home-shell">
       <div class="km-home-section-heading">
-        <span class="km-home-eyebrow">Comparison</span>
         <h2>Why teams use KubeMemo instead of leaving this problem to “somewhere else”.</h2>
       </div>
 
@@ -173,7 +166,6 @@
   <section class="km-home-section">
     <div class="km-home-shell">
       <div class="km-home-section-heading">
-        <span class="km-home-eyebrow">Operator workflow</span>
         <h2>Three steps from missing context to readable operational memory.</h2>
       </div>
 
@@ -199,52 +191,45 @@
 
   <section class="km-home-section km-home-section--band">
     <div class="km-home-shell">
-      <div class="km-home-section-heading">
-        <span class="km-home-eyebrow">Use it your way</span>
-        <h2>CLI, TUI, PowerShell, Homebrew, GitHub releases, and Helm.</h2>
-      </div>
+      <div class="km-home-showcase-panel">
+        <div class="km-home-showcase-copy">
+          <span class="km-home-card__eyebrow">Terminal-first experience</span>
+          <h2>Read the context right where the work is happening.</h2>
+          <p>KubeMemo gives operators a terminal-native way to read durable notes, inspect runtime breadcrumbs, and recover incident context without switching between chat, docs, and dashboards.</p>
 
-      <div class="km-home-showcase">
-        <article class="km-home-terminal-window">
-          <div class="km-home-terminal-window__bar">
-            <span></span><span></span><span></span>
+          <ul class="km-home-showcase-points">
+            <li>Use the native CLI for memo cards, search, and activity watching.</li>
+            <li>Open the TUI board to filter by namespace, kind, and runtime state.</li>
+            <li>Install with Homebrew, GitHub releases, or PowerShell Gallery.</li>
+            <li>Run the optional Helm deployment for always-on activity capture.</li>
+          </ul>
+
+          <div class="km-home-showcase-actions">
+            <a class="km-button" href="{{ 'cli/' | url }}">View CLI Docs</a>
+            <a class="km-button km-button--secondary" href="{{ config.repo_url }}">View on GitHub</a>
           </div>
-          <div class="km-home-terminal-window__meta">kubememo show --kind Deployment --namespace prod --name orders-api</div>
-          <pre><code>KubeMemo  Deployment/prod/orders-api
+        </div>
 
-Durable Memos
-
-📌  WARNING  Orders API warm-up behavior
-Deployment/prod/orders-api
-Owner: platform-apps
-
-summary
-  Expected transient 502s after deployment
-
-guidance
-  Ignore failures for up to 3 minutes after rollout.
-
-Runtime Memos
-
-📍  ACTIVITY  Manual scale change detected
-Deployment/prod/orders-api • expires 12h
-Source: activity-capture
-
-summary
-  Replicas changed from 2 to 5 during investigation</code></pre>
-        </article>
-
-        <div class="km-home-showcase-stack">
-          <article class="km-home-card km-home-card--blue">
-            <span class="km-home-card__eyebrow">Native CLI</span>
-            <h3>Read memos in the terminal where the incident is already happening</h3>
-            <p>Use the Go CLI for card rendering, search, activity watching, and the TUI without leaving the shell.</p>
+        <div class="km-home-showcase-right">
+          <article class="km-home-terminal-window">
+            <div class="km-home-terminal-window__bar">
+              <div class="km-home-terminal-window__label">console</div>
+              <div class="km-home-terminal-window__dots"><span></span><span></span><span></span></div>
+            </div>
+            <pre><code><span class="km-home-terminal-user">kubememo@kubedeck</span> <span class="km-home-terminal-accent">$</span>
+kubememo show --kind Deployment --namespace prod --name orders-api</code></pre>
           </article>
-          <article class="km-home-card km-home-card--green">
-            <span class="km-home-card__eyebrow">Platform fit</span>
-            <h3>Install the way your team already works</h3>
-            <p>Use Homebrew, GitHub releases, the PowerShell wrapper, or the optional Helm deployment for always-on cluster activity capture.</p>
-          </article>
+
+          <div class="km-home-showcase-queries">
+            <h3>Example tasks</h3>
+            <ul>
+              <li>"Show the memos for the orders API deployment"</li>
+              <li>"Find runtime notes for the prod namespace"</li>
+              <li>"Watch activity for Deployment changes in prod"</li>
+              <li>"Open the memo board and filter to runtime memos"</li>
+              <li>"Show warnings and ownership notes for this service"</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
@@ -253,7 +238,6 @@ summary
   <section class="km-home-section km-home-section--tight">
     <div class="km-home-shell">
       <div class="km-home-cta">
-        <span class="km-home-eyebrow">Start small</span>
         <h2>Add one real memo to one real workload and make that context visible in minutes.</h2>
         <p>
           Bootstrap the runtime store, attach one warning or runbook to a production target, then use the CLI or TUI during the next deployment window.
