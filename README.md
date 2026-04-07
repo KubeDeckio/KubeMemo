@@ -225,13 +225,14 @@ TUI shortcuts:
 ```text
 [Arrows]/[j][k] move
 [g]/[G] jump top/end
+[Enter] focus/collapse detail
 [PgUp]/[PgDn] or [u][d] scroll the detail pane
 [/] text filter
 [n] namespace filter
 [c] kind filter
 [a]/[m]/[t] all, durable, runtime views
-[s] cycle sort
-[[]/[]] previous/next page
+[[] previous page
+[]] next page
 [x] clear filters
 [r] refresh
 [?] help

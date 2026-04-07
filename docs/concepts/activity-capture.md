@@ -101,6 +101,29 @@ KubeMemo deduplicates repeated identical changes inside a short time window.
 
 The goal is to avoid writing the same activity memo again and again if the same exact change is observed repeatedly.
 
+Today, a duplicate means:
+
+- the same action
+- the same field path
+- the same old value
+- the same new value
+- seen again inside the configured dedupe window
+
+That means a `scale` change from `2` to `3` can be suppressed as a duplicate, while a later `3` to `4` change will still create a new runtime memo.
+
+## Watcher stability
+
+Both the foreground watcher and the optional in-cluster watcher are designed to recover from normal watch interruptions.
+
+Current behavior:
+
+- relist the watched resource kind before resuming the watch
+- restart watches when the watch channel closes
+- retry after transient watch or list failures with backoff
+- reset resource version state when the API reports an expired watch window
+
+This keeps activity capture running during longer sessions without requiring manual restarts for normal watch churn.
+
 ## Notes-enabled behavior
 
 Activity capture is designed to focus on targets that are already relevant to KubeMemo.

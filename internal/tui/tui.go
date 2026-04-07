@@ -37,6 +37,7 @@ type modelState struct {
 	storeFilter     string
 	textFilter      string
 	page            int
+	expandedDetail  bool
 	width           int
 	height          int
 	showHelp        bool
@@ -167,6 +168,13 @@ func (m modelState) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "?":
 			m.showHelp = !m.showHelp
 			return m, nil
+		case "enter":
+			if m.selectedNote() != nil {
+				m.expandedDetail = !m.expandedDetail
+				m.updateLayout(max(8, m.height-bannerHeight(m.width, m.height)-4-3))
+				m.updateViewport()
+			}
+			return m, nil
 		case "j", "down":
 			if len(m.notes) > 0 && m.table.Cursor() >= len(m.notes)-1 && m.page < m.pageCount()-1 {
 				m.page++
@@ -275,10 +283,12 @@ func (m modelState) View() string {
 	if note := m.selectedNote(); note != nil {
 		detailTitle = lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("45")).Render(" DETAIL  " + render.TargetLabel(*note) + " ")
 	}
-	left := listTitle + "\n" + m.table.View()
+	left := listTitle + m.renderListMeta() + "\n" + m.table.View()
 	right := detailTitle + "\n" + m.viewport.View() + "\n" + m.renderDetailMeta()
 	var content string
-	if m.isStackedLayout() {
+	if m.expandedDetail {
+		content = right
+	} else if m.isStackedLayout() {
 		content = lipgloss.JoinVertical(
 			lipgloss.Left,
 			lipgloss.NewStyle().Width(max(40, m.width)).Render(left),
@@ -344,15 +354,21 @@ func (m modelState) renderHeader() string {
 func (m modelState) renderFooterKeys() string {
 	key := lipgloss.NewStyle().Foreground(lipgloss.Color("16")).Background(lipgloss.Color("45")).Bold(true)
 	desc := lipgloss.NewStyle().Foreground(lipgloss.Color("252"))
+	enterLabel := "focus detail"
+	if m.expandedDetail {
+		enterLabel = "collapse detail"
+	}
 	items := []string{
 		key.Render(" ↑ ↓ / j k ") + desc.Render(" move"),
 		key.Render(" g / G ") + desc.Render(" top/end"),
+		key.Render(" Enter ") + desc.Render(" " + enterLabel),
 		key.Render(" PgUp PgDn / u d ") + desc.Render(" scroll"),
 		key.Render(" / ") + desc.Render(" text"),
 		key.Render(" n ") + desc.Render(" ns"),
 		key.Render(" c ") + desc.Render(" kind"),
 		key.Render(" a / m / t ") + desc.Render(" all/durable/runtime"),
-		key.Render(" [ / ] ") + desc.Render(" prev/next page"),
+		key.Render(" [ ") + desc.Render(" prev page"),
+		key.Render(" ] ") + desc.Render(" next page"),
 		key.Render(" x ") + desc.Render(" clear"),
 		key.Render(" r ") + desc.Render(" refresh"),
 		key.Render(" ? ") + desc.Render(" help"),
@@ -393,9 +409,14 @@ func (m modelState) renderDetailMeta() string {
 }
 
 func (m modelState) renderHelp() string {
+	enterLine := "[Enter] toggle focused detail view"
+	if m.expandedDetail {
+		enterLine = "[Enter] collapse focused detail view"
+	}
 	lines := []string{
 		"[/] text filter  [n] namespace filter  [c] kind filter",
 		"[a] all memos  [m] durable only  [t] runtime only  [x] clear filters",
+		enterLine,
 		"[j][k] or arrows move  [g]/[G] jump top/end  [u][d] or [PgUp]/[PgDn] scroll detail",
 		"[r] refresh  [q] quit",
 	}
@@ -423,7 +444,44 @@ func (m modelState) statusText() string {
 	return fmt.Sprintf("%d/%d | page %d/%d | view %s", (m.page*m.pageSize())+m.table.Cursor()+1, len(m.allNotes), m.page+1, max(1, m.pageCount()), view)
 }
 
+func (m modelState) renderListMeta() string {
+	pageCount := m.pageCount()
+	filterBits := []string{}
+	if strings.TrimSpace(m.textFilter) != "" {
+		filterBits = append(filterBits, "text:"+m.textFilter)
+	}
+	if strings.TrimSpace(m.namespaceFilter) != "" {
+		filterBits = append(filterBits, "ns:"+m.namespaceFilter)
+	}
+	if strings.TrimSpace(m.kindFilter) != "" {
+		filterBits = append(filterBits, "kind:"+m.kindFilter)
+	}
+	view := "all"
+	if m.storeFilter != "" {
+		view = m.storeFilter
+	} else if !m.opts.IncludeRuntime {
+		view = "durable"
+	}
+	if view != "all" {
+		filterBits = append(filterBits, "view:"+view)
+	}
+
+	parts := []string{}
+	if pageCount > 1 {
+		parts = append(parts, lipgloss.NewStyle().Foreground(lipgloss.Color("214")).Render(fmt.Sprintf("  page %d/%d", m.page+1, pageCount)))
+	}
+	if len(filterBits) > 0 {
+		parts = append(parts, lipgloss.NewStyle().Foreground(lipgloss.Color("110")).Render("  "+strings.Join(filterBits, "  ")))
+	}
+	return strings.Join(parts, "")
+}
+
 func (m *modelState) updateLayout(contentHeight int) {
+	if m.expandedDetail {
+		m.viewport.Width = max(40, m.width-2)
+		m.viewport.Height = max(8, contentHeight)
+		return
+	}
 	listWidth := max(48, m.width/2)
 	viewportWidth := max(32, m.width-listWidth-4)
 	if m.isStackedLayout() {

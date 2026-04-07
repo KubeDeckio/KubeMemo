@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/KubeDeckio/KubeMemo/internal/model"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -73,12 +74,21 @@ func (s *Service) StartActivityCapture(ctx context.Context, runtimeNamespace str
 func (s *Service) watchTargetLoop(ctx context.Context, target watchTarget, namespace, runtimeNamespace string, onEvent func(ActivityEvent)) error {
 	resourceVersion := ""
 	state := map[string]*unstructured.Unstructured{}
+	backoff := time.Second
 
 	for {
 		list, err := s.kube.List(ctx, target.gvr, namespace)
 		if err != nil {
-			return err
+			if ctx.Err() != nil {
+				return nil
+			}
+			if !sleepWithContext(ctx, backoff) {
+				return nil
+			}
+			backoff = nextWatchBackoff(backoff)
+			continue
 		}
+		backoff = time.Second
 		resourceVersion = list.GetResourceVersion()
 		state = map[string]*unstructured.Unstructured{}
 		for i := range list.Items {
@@ -90,8 +100,19 @@ func (s *Service) watchTargetLoop(ctx context.Context, target watchTarget, names
 
 		watcher, err := s.kube.Watch(ctx, target.gvr, namespace, resourceVersion)
 		if err != nil {
-			return err
+			if ctx.Err() != nil {
+				return nil
+			}
+			if isExpiredWatchError(err) {
+				resourceVersion = ""
+			}
+			if !sleepWithContext(ctx, backoff) {
+				return nil
+			}
+			backoff = nextWatchBackoff(backoff)
+			continue
 		}
+		backoff = time.Second
 
 		restart := false
 		for !restart {
@@ -132,16 +153,21 @@ func (s *Service) watchTargetLoop(ctx context.Context, target watchTarget, names
 				case watch.Deleted:
 					delete(state, key)
 				case watch.Error:
+					if status, ok := evt.Object.(*metav1.Status); ok && isExpiredStatus(status) {
+						resourceVersion = ""
+					}
 					restart = true
 				}
 			}
 		}
 
-		select {
-		case <-ctx.Done():
+		if ctx.Err() != nil {
 			return nil
-		case <-time.After(2 * time.Second):
 		}
+		if !sleepWithContext(ctx, backoff) {
+			return nil
+		}
+		backoff = nextWatchBackoff(backoff)
 	}
 }
 
@@ -252,6 +278,10 @@ func (s *Service) isDuplicateActivity(ctx context.Context, evt ActivityEvent, ru
 		return false, err
 	}
 	window := time.Duration(s.cfg.ActivityCapture.DedupeWindowSeconds) * time.Second
+	return duplicateActivityInWindow(notes, evt, window), nil
+}
+
+func duplicateActivityInWindow(notes []model.Note, evt ActivityEvent, window time.Duration) bool {
 	for _, note := range notes {
 		activity := note.Activity
 		if !strings.EqualFold(stringValue(activity["action"]), evt.Action) {
@@ -264,10 +294,46 @@ func (s *Service) isDuplicateActivity(ctx context.Context, evt ActivityEvent, ru
 			continue
 		}
 		if note.CreatedAt != nil && evt.DetectedAt.Sub(note.CreatedAt.UTC()) <= window {
-			return true, nil
+			return true
 		}
 	}
-	return false, nil
+	return false
+}
+
+func nextWatchBackoff(current time.Duration) time.Duration {
+	if current <= 0 {
+		return time.Second
+	}
+	next := current * 2
+	if next > 15*time.Second {
+		return 15 * time.Second
+	}
+	return next
+}
+
+func sleepWithContext(ctx context.Context, delay time.Duration) bool {
+	timer := time.NewTimer(delay)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return false
+	case <-timer.C:
+		return true
+	}
+}
+
+func isExpiredStatus(status *metav1.Status) bool {
+	if status == nil {
+		return false
+	}
+	return status.Reason == metav1.StatusReasonExpired || status.Code == 410
+}
+
+func isExpiredWatchError(err error) bool {
+	if err == nil {
+		return false
+	}
+	return apierrors.IsResourceExpired(err) || apierrors.IsGone(err)
 }
 
 func (s *Service) isTargetNoteEnabled(ctx context.Context, target model.Target, obj unstructured.Unstructured, runtimeNamespace string) (bool, error) {

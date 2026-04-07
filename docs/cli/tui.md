@@ -20,26 +20,29 @@ Open-KubeMemoTui
 - Auto-refreshes by default
 - Supports namespace, kind, and text filtering
 - Uses a split memo-board layout with detail pane rendering
-- Sorts by recent memo activity by default
-- Shows current access posture in the header and status line so RBAC limitations are visible while browsing
+- Paginates larger memo sets
+- Stacks the detail pane below the memo list on narrower terminals
 
 ## Navigation
 
 ```text
 [Arrows]/[j][k] move
 [g]/[G] jump top/end
+[Enter] focus/collapse detail
 [PgUp]/[PgDn] or [u][d] scroll
 [/] text filter
 [n] namespace filter
 [c] kind filter
 [a]/[m]/[t] all/durable/runtime
-[s] cycle sort
-[[]/[]] previous/next page
+[[] previous page
+[]] next page
 [x] clear filters
 [r] refresh
 [?] help
 [q] quit
 ```
+
+`j`/`k` and the arrow keys will also roll across page boundaries automatically when you reach the top or bottom of the current page.
 
 ## Why the TUI exists
 
