@@ -17,6 +17,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Detect prerelease tag
+        id: prerelease
+        shell: pwsh
+        run: |
+          $tag = $Env:TAG -replace '^v', ''
+          if ($tag -match '^([0-9]+\.[0-9]+\.[0-9]+)-(.+)$') {
+            "stable_version=$($Matches[1])" >> $env:GITHUB_OUTPUT
+            "prerelease_label=$($Matches[2])" >> $env:GITHUB_OUTPUT
+            "is_prerelease=true" >> $env:GITHUB_OUTPUT
+          }
+          else {
+            "stable_version=$tag" >> $env:GITHUB_OUTPUT
+            "prerelease_label=" >> $env:GITHUB_OUTPUT
+            "is_prerelease=false" >> $env:GITHUB_OUTPUT
+          }
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -25,10 +41,28 @@ jobs:
       - name: Set module version from tag
         shell: pwsh
         run: |
-          $version = $Env:TAG -replace '^v', ''
-          (Get-Content ./KubeMemo/KubeMemo.psd1) `
-            -replace "^\s*ModuleVersion\s*=\s*'.*'", "    ModuleVersion     = '$version'" |
-            Set-Content ./KubeMemo/KubeMemo.psd1
+          $version = "${{ steps.prerelease.outputs.stable_version }}"
+          $prerelease = "${{ steps.prerelease.outputs.prerelease_label }}"
+          $manifestPath = "./KubeMemo/KubeMemo.psd1"
+          $content = Get-Content $manifestPath -Raw
+
+          $content = $content -replace "^\s*ModuleVersion\s*=\s*'.*'", "    ModuleVersion     = '$version'"
+
+          if ([string]::IsNullOrWhiteSpace($prerelease)) {
+            $content = $content -replace "(?ms)\r?\n\s*Prerelease\s*=\s*'.*?'", ""
+          }
+          else {
+            if ($content -match "(?ms)PSData\s*=\s*@\{") {
+              if ($content -match "(?ms)\r?\n\s*Prerelease\s*=\s*'.*?'") {
+                $content = $content -replace "(?ms)(\r?\n\s*Prerelease\s*=\s*').*?(')", "`$1$prerelease`$2"
+              }
+              else {
+                $content = $content -replace "(?ms)(PSData\s*=\s*@\{)", "`$1`r`n            Prerelease = '$prerelease'"
+              }
+            }
+          }
+
+          Set-Content -Path $manifestPath -Value $content
 
       - name: Build bundled binaries for module package
         shell: pwsh
@@ -69,7 +103,7 @@ jobs:
             $env:GOOS = $target.Goos
             $env:GOARCH = $target.Goarch
             $env:CGO_ENABLED = '0'
-            $version = $Env:TAG -replace '^v', ''
+            $version = "${{ steps.prerelease.outputs.stable_version }}"
             go build -trimpath -ldflags="-s -w -X github.com/KubeDeckio/KubeMemo/internal/cli.version=$version" -o $output ./cmd/kubememo
             if ($LASTEXITCODE -ne 0) {
               throw "go build failed for $($target.Goos)/$($target.Goarch)"

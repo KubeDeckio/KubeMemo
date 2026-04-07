@@ -17,6 +17,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Detect prerelease tag
+        id: prerelease
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${TAG#v}"
+          if [[ "$tag" == *-rc* || "$tag" == *-beta* || "$tag" == *-alpha* ]]; then
+            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -108,6 +120,7 @@ jobs:
           files: |
             dist/release/*
           body_path: dist/release/release_notes.md
+          prerelease: ${{ steps.prerelease.outputs.is_prerelease }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
