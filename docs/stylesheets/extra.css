@@ -1069,6 +1069,10 @@ body {
   background: linear-gradient(180deg, rgba(12, 26, 46, 0.92), rgba(17, 35, 61, 0.96));
 }
 
+.km-home-section--comparison {
+  background: linear-gradient(180deg, rgba(15, 27, 47, 0.98), rgba(16, 29, 51, 0.98));
+}
+
 .km-home-section--workflow {
   background: linear-gradient(180deg, rgba(15, 27, 47, 0.98), rgba(16, 29, 51, 0.98));
 }
@@ -1217,7 +1221,7 @@ body {
 .km-home-workflow-step {
   padding: 1.55rem;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .km-home-card::after,
@@ -1542,6 +1546,11 @@ body {
 [data-md-color-scheme="default"] .km-home-section--band,
 [data-md-color-scheme="light"] .km-home-section--band {
   background: linear-gradient(180deg, #edf5ff, #f8fbff);
+}
+
+[data-md-color-scheme="default"] .km-home-section--comparison,
+[data-md-color-scheme="light"] .km-home-section--comparison {
+  background: linear-gradient(180deg, #eef5ff, #f7fbff);
 }
 
 [data-md-color-scheme="default"] .km-home-section--workflow,
