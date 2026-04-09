@@ -1069,6 +1069,10 @@ body {
   background: linear-gradient(180deg, rgba(12, 26, 46, 0.92), rgba(17, 35, 61, 0.96));
 }
 
+.km-home-section--workflow {
+  background: linear-gradient(180deg, rgba(15, 27, 47, 0.98), rgba(16, 29, 51, 0.98));
+}
+
 .km-home-section--cta {
   background: linear-gradient(180deg, rgba(15, 27, 47, 0.98), rgba(16, 29, 51, 0.98));
 }
@@ -1538,6 +1542,11 @@ body {
 [data-md-color-scheme="default"] .km-home-section--band,
 [data-md-color-scheme="light"] .km-home-section--band {
   background: linear-gradient(180deg, #edf5ff, #f8fbff);
+}
+
+[data-md-color-scheme="default"] .km-home-section--workflow,
+[data-md-color-scheme="light"] .km-home-section--workflow {
+  background: linear-gradient(180deg, #eef5ff, #f7fbff);
 }
 
 [data-md-color-scheme="default"] .km-home-section--cta,
